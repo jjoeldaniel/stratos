@@ -21,20 +21,44 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
       />
     </div>
 
-    <button
-      id="new-btn"
-      class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm rounded-lg px-4 py-2.5 transition-all text-sm font-medium text-white w-full mb-8"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-        ><path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg
+    <div class="space-y-2 mb-8">
+      <button
+        id="new-file-btn"
+        class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm rounded-lg px-4 py-2.5 transition-all text-sm font-medium text-white w-full"
       >
-      Upload File
-    </button>
-    <input type="file" id="file-input" class="hidden" multiple />
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg
+        >
+        Upload File
+      </button>
+      <button
+        id="new-folder-btn"
+        class="flex items-center justify-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 shadow-sm rounded-lg px-4 py-2 transition-all text-sm font-medium text-gray-700 w-full"
+      >
+        <svg
+          class="w-4 h-4 text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          ></path></svg
+        >
+        New Folder
+      </button>
+      <input type="file" id="file-input" class="hidden" multiple />
+    </div>
 
     <div id="team-section" class="flex-1 overflow-y-auto hidden">
       <p
@@ -55,20 +79,8 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
       class="absolute inset-4 rounded-2xl border-2 border-blue-400 border-dashed bg-blue-50/95 z-50 flex items-center justify-center hidden pointer-events-none transition-all"
     >
       <div class="text-center">
-        <svg
-          class="w-16 h-16 text-blue-500 mx-auto mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          ><path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-          ></path></svg
-        >
         <p class="text-2xl font-semibold text-blue-700">
-          Drop files to instantly upload
+          Drop to upload to this folder
         </p>
       </div>
     </div>
@@ -76,24 +88,20 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     <div
       class="flex justify-between items-end mb-8 border-b border-gray-100 pb-4"
     >
-      <h2
-        id="workspace-title"
-        class="text-2xl font-semibold text-gray-800 tracking-tight"
+      <nav
+        id="breadcrumbs"
+        class="flex flex-wrap items-center gap-2 text-xl font-semibold text-gray-800 tracking-tight"
       >
-        My Drive
-      </h2>
+      </nav>
       <span
         id="upload-status"
         class="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full hidden"
-        >Uploading...</span
+        >Processing...</span
       >
     </div>
 
-    <div
-      id="file-list-container"
-      class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5"
-    >
-      <p class="text-gray-400 col-span-full text-sm">Loading workspace...</p>
+    <div id="file-list-container" class="space-y-8">
+      <p class="text-gray-400 text-sm">Loading...</p>
     </div>
   </main>
 </div>
@@ -101,13 +109,17 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
 <script>
   import { getSupabaseClient } from "../lib/supabase";
 
+  let currentPath = [];
+  let activeWorkspaceId = null; // Track this to prevent unnecessary path resets
+
   const container = document.getElementById("file-list-container");
   const driveMain = document.getElementById("drive-main");
   const dragOverlay = document.getElementById("drag-overlay");
-  const newBtn = document.getElementById("new-btn");
+  const newFileBtn = document.getElementById("new-file-btn");
+  const newFolderBtn = document.getElementById("new-folder-btn");
   const fileInput = document.getElementById("file-input");
   const uploadStatus = document.getElementById("upload-status");
-  const workspaceTitle = document.getElementById("workspace-title");
+  const breadcrumbsNav = document.getElementById("breadcrumbs");
   const teamSection = document.getElementById("team-section");
   const teamMembersList = document.getElementById("team-members-list");
 
@@ -115,9 +127,8 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     return window.Clerk.organization?.id || window.Clerk.user.id;
   }
 
-  // Check if user is Org Admin OR in their Personal Drive
   function checkAdminPrivileges() {
-    if (!window.Clerk.organization) return true; // You are admin of your personal drive
+    if (!window.Clerk.organization) return true;
     return window.Clerk.organizationMember?.role === "org:admin";
   }
 
@@ -125,186 +136,399 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     if (window.Clerk && window.Clerk.loaded) {
       clearInterval(waitForClerk);
       if (window.Clerk.user) {
-        refreshUI();
-        window.Clerk.addListener(() => refreshUI());
-      } else {
-        container.innerHTML =
-          '<p class="text-gray-500 col-span-full">Please sign in.</p>';
+        activeWorkspaceId = getActiveWorkspaceId();
+        refreshUI(true);
+
+        window.Clerk.addListener(() => {
+          const newWorkspaceId = getActiveWorkspaceId();
+          if (newWorkspaceId !== activeWorkspaceId) {
+            // ONLY reset path if the user actually switched teams
+            activeWorkspaceId = newWorkspaceId;
+            refreshUI(true);
+          } else {
+            // Background token refresh? Just update team members list invisibly
+            loadTeamMembers();
+          }
+        });
       }
     }
   }, 100);
 
-  function refreshUI() {
-    workspaceTitle.textContent =
-      window.Clerk.organization?.name || "Personal Drive";
+  function refreshUI(resetPath = false) {
+    if (resetPath) currentPath = [];
+    renderBreadcrumbs();
     loadFiles();
     loadTeamMembers();
   }
 
-  // --- Fetch Team Members for Sidebar ---
-  async function loadTeamMembers() {
-    if (!window.Clerk.organization) {
-      teamSection.classList.add("hidden");
-      return;
+  // --- Move to Ancestor Logic ---
+  async function moveItemToAncestor(e, ancestorIndex) {
+    const dragData = JSON.parse(
+      e.dataTransfer.getData("application/json") || "{}",
+    );
+    const oldPath = dragData.path;
+    const isFolder = dragData.type === "folder";
+
+    if (!oldPath) return;
+
+    const workspaceId = getActiveWorkspaceId();
+    // Calculate new path: Root + currentPath up to the ancestorIndex + item name
+    const ancestorPathSlice = currentPath.slice(0, ancestorIndex + 1);
+    const destinationPrefix =
+      ancestorPathSlice.length > 0 ? ancestorPathSlice.join("/") + "/" : "";
+    const itemName = oldPath.split("/").pop();
+    const newPath = `${workspaceId}/${destinationPrefix}${itemName}`;
+
+    if (oldPath === newPath) return; // Dropped on self
+
+    uploadStatus.classList.remove("hidden");
+    uploadStatus.textContent = isFolder ? "Moving folder..." : "Moving file...";
+
+    const supabase = await getSupabaseClient();
+
+    if (isFolder) {
+      // Supabase doesn't have a "move folder" command.
+      // We must list all files with the folder prefix and move them one by one.
+      const { data: filesToMove } = await supabase.storage
+        .from("user_files")
+        .list(oldPath.replace(`${workspaceId}/`, ""), { limit: 100 });
+
+      if (filesToMove) {
+        for (const file of filesToMove) {
+          const fileOldPath = `${oldPath}/${file.name}`;
+          const fileNewPath = `${newPath}/${file.name}`;
+          await supabase.storage
+            .from("user_files")
+            .move(fileOldPath, fileNewPath);
+        }
+      }
+    } else {
+      // Simple file move
+      await supabase.storage.from("user_files").move(oldPath, newPath);
     }
 
-    teamSection.classList.remove("hidden");
-    teamMembersList.innerHTML =
-      '<p class="text-xs text-gray-400">Loading team...</p>';
-
-    try {
-      const { data: memberships } =
-        await window.Clerk.organization.getMemberships();
-      teamMembersList.innerHTML = "";
-
-      memberships.forEach((member) => {
-        const li = document.createElement("li");
-        li.className = "flex items-center gap-3";
-
-        const isSelf = member.publicUserData.userId === window.Clerk.user.id;
-        const roleColor =
-          member.role === "org:admin"
-            ? "text-blue-600 bg-blue-50"
-            : "text-gray-500 bg-gray-100";
-        const roleLabel = member.role === "org:admin" ? "Admin" : "Viewer";
-
-        li.innerHTML = `
-          <img src="${member.publicUserData.imageUrl}" class="w-7 h-7 rounded-full border border-gray-200" alt="Avatar">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-gray-700 truncate">${member.publicUserData.firstName} ${isSelf ? "(You)" : ""}</p>
-            <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${roleColor}">${roleLabel}</span>
-          </div>
-        `;
-        teamMembersList.appendChild(li);
-      });
-    } catch (e) {
-      console.error("Failed to load members", e);
-    }
+    uploadStatus.classList.add("hidden");
+    refreshUI(); // Reload to show the item has left the current view
   }
 
-  // --- Drag & Drop ---
+  // --- Enhanced Breadcrumb Logic with Drop Targets ---
+  function renderBreadcrumbs() {
+    const rootName = window.Clerk.organization?.name || "Personal Drive";
+    breadcrumbsNav.innerHTML = "";
+
+    // 1. Root Breadcrumb (Home)
+    const rootBtn = document.createElement("button");
+    rootBtn.className =
+      "hover:text-blue-600 transition-colors truncate max-w-[200px] text-left px-1 rounded hover:bg-gray-100";
+    rootBtn.textContent = rootName;
+    rootBtn.onclick = () => {
+      currentPath = [];
+      refreshUI();
+    };
+
+    // Drop logic for Root
+    rootBtn.ondragover = (e) => {
+      e.preventDefault();
+      rootBtn.classList.add("bg-blue-100", "text-blue-700");
+    };
+    rootBtn.ondragleave = () =>
+      rootBtn.classList.remove("bg-blue-100", "text-blue-700");
+    rootBtn.ondrop = (e) => {
+      e.preventDefault();
+      rootBtn.classList.remove("bg-blue-100", "text-blue-700");
+      moveItemToAncestor(e, -1); // -1 signifies the root
+    };
+
+    breadcrumbsNav.appendChild(rootBtn);
+
+    // 2. Ancestor Folders
+    currentPath.forEach((folder, index) => {
+      const separator = document.createElement("span");
+      separator.className = "text-gray-400 text-lg mx-1";
+      separator.textContent = "/";
+      breadcrumbsNav.appendChild(separator);
+
+      const folderBtn = document.createElement("button");
+      const isLast = index === currentPath.length - 1;
+
+      folderBtn.className = isLast
+        ? "text-gray-800 font-bold px-1"
+        : "hover:text-blue-600 transition-colors px-1 rounded hover:bg-gray-100";
+
+      folderBtn.textContent = folder;
+      folderBtn.onclick = () => {
+        currentPath = currentPath.slice(0, index + 1);
+        refreshUI();
+      };
+
+      // Only allow dropping on ANCESTORS (not the current folder itself)
+      if (!isLast) {
+        folderBtn.ondragover = (e) => {
+          e.preventDefault();
+          folderBtn.classList.add("bg-blue-100", "text-blue-700");
+        };
+        folderBtn.ondragleave = () =>
+          folderBtn.classList.remove("bg-blue-100", "text-blue-700");
+        folderBtn.ondrop = (e) => {
+          e.preventDefault();
+          folderBtn.classList.remove("bg-blue-100", "text-blue-700");
+          moveItemToAncestor(e, index);
+        };
+      }
+
+      breadcrumbsNav.appendChild(folderBtn);
+    });
+  }
+
+  async function loadTeamMembers() {
+    if (!window.Clerk.organization) return teamSection.classList.add("hidden");
+    teamSection.classList.remove("hidden");
+    const { data: memberships } =
+      await window.Clerk.organization.getMemberships();
+    teamMembersList.innerHTML = "";
+
+    memberships.forEach((member) => {
+      const isSelf = member.publicUserData.userId === window.Clerk.user.id;
+      const isAdmin = member.role === "org:admin";
+      teamMembersList.innerHTML += `
+        <li class="flex items-center gap-3">
+          <img src="${member.publicUserData.imageUrl}" class="w-7 h-7 rounded-full border border-gray-200">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-gray-700 truncate">${member.publicUserData.firstName} ${isSelf ? "(You)" : ""}</p>
+            <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isAdmin ? "text-blue-600 bg-blue-50" : "text-gray-500 bg-gray-100"}">${isAdmin ? "Admin" : "Viewer"}</span>
+          </div>
+        </li>`;
+    });
+  }
+
+  newFileBtn.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", (e) => handleUpload(e.target.files));
+
+  newFolderBtn.addEventListener("click", async () => {
+    const folderName = prompt("Enter folder name:");
+    if (!folderName) return;
+    const workspaceId = getActiveWorkspaceId();
+    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+    const dummyPath = `${workspaceId}/${prefix}${folderName}/.emptyFolderPlaceholder`;
+    const supabase = await getSupabaseClient();
+    await supabase.storage.from("user_files").upload(dummyPath, new Blob([""]));
+    loadFiles();
+  });
+
+  async function handleUpload(files) {
+    if (!files || files.length === 0) return;
+    const workspaceId = getActiveWorkspaceId();
+    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+    const supabase = await getSupabaseClient();
+
+    uploadStatus.classList.remove("hidden");
+    uploadStatus.textContent = "Uploading...";
+
+    for (const file of files) {
+      const filePath = `${workspaceId}/${prefix}${Date.now()}_${file.name}`;
+      await supabase.storage.from("user_files").upload(filePath, file);
+    }
+
+    uploadStatus.classList.add("hidden");
+    loadFiles();
+  }
+
+  // --- Targeted Drag & Drop Logic ---
   let dragCounter = 0;
+
   driveMain.addEventListener("dragenter", (e) => {
     e.preventDefault();
-    dragCounter++;
-    dragOverlay.classList.remove("hidden");
+    // Only show the big upload overlay if we are dragging actual files from the OS
+    if (e.dataTransfer.types.includes("Files")) {
+      dragCounter++;
+      dragOverlay.classList.remove("hidden");
+    }
   });
+
   driveMain.addEventListener("dragleave", (e) => {
     e.preventDefault();
-    dragCounter--;
-    if (dragCounter === 0) dragOverlay.classList.add("hidden");
+    if (e.dataTransfer.types.includes("Files")) {
+      dragCounter--;
+      if (dragCounter === 0) dragOverlay.classList.add("hidden");
+    }
   });
+
   driveMain.addEventListener("dragover", (e) => e.preventDefault());
+
   driveMain.addEventListener("drop", (e) => {
     e.preventDefault();
     dragCounter = 0;
     dragOverlay.classList.add("hidden");
-    handleUpload(e.dataTransfer.files);
+
+    // Check if it's an external file upload
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleUpload(e.dataTransfer.files);
+    }
   });
 
-  newBtn.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", (e) => handleUpload(e.target.files));
-
-  // --- Upload ---
-  async function handleUpload(files) {
-    if (!files || files.length === 0) return;
-    const workspaceId = getActiveWorkspaceId();
-    const supabase = await getSupabaseClient();
-
-    uploadStatus.classList.remove("hidden");
-    uploadStatus.textContent = `Uploading ${files.length} file(s)...`;
-
-    for (const file of files) {
-      const filePath = `${workspaceId}/${Date.now()}_${file.name}`;
-      await supabase.storage.from("user_files").upload(filePath, file);
-    }
-
-    uploadStatus.textContent = "Upload complete!";
-    setTimeout(() => uploadStatus.classList.add("hidden"), 2000);
-    loadFiles();
-  }
-
-  // --- File Grid & Permissions ---
   async function loadFiles() {
     const workspaceId = getActiveWorkspaceId();
     const supabase = await getSupabaseClient();
     const isAdmin = checkAdminPrivileges();
+    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+    const searchPath = `${workspaceId}${prefix ? "/" + prefix.slice(0, -1) : ""}`;
 
-    container.innerHTML = "";
+    container.innerHTML = '<p class="text-gray-400 text-sm">Loading...</p>';
     const { data, error } = await supabase.storage
       .from("user_files")
-      .list(workspaceId, {
+      .list(searchPath, {
         limit: 100,
         sortBy: { column: "created_at", order: "desc" },
       });
 
     if (error)
       return (container.innerHTML =
-        '<p class="text-red-500 text-sm">Failed to load files.</p>');
+        '<p class="text-red-500 text-sm">Failed to load folder.</p>');
 
-    const validFiles =
+    const validItems =
       data?.filter((f) => f.name !== ".emptyFolderPlaceholder") || [];
-    if (validFiles.length === 0)
+    if (validItems.length === 0)
       return (container.innerHTML =
-        '<div class="col-span-full py-20 text-center text-gray-400 text-sm">This workspace is empty.</div>');
+        '<div class="py-10 text-center text-gray-400 text-sm w-full border-2 border-dashed border-gray-100 rounded-xl">This folder is empty.</div>');
 
-    validFiles.forEach((file) => {
-      const cleanFileName = file.name.replace(/^\d+_/, "");
-      const fullPath = `${workspaceId}/${file.name}`;
+    container.innerHTML = "";
+    const folders = validItems.filter((item) => !item.id);
+    const files = validItems.filter((item) => item.id);
 
-      const fileCard = document.createElement("div");
-      fileCard.className =
-        "group flex flex-col justify-between p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-md transition-all";
+    // Render Folders Section
+    if (folders.length > 0) {
+      const folderSection = document.createElement("div");
+      folderSection.innerHTML = `<h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Folders</h3>`;
+      const folderGrid = document.createElement("div");
+      folderGrid.className =
+        "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4";
 
-      const previewArea = document.createElement("div");
-      previewArea.className = "cursor-pointer mb-4 flex flex-col items-center";
-      previewArea.onclick = () => previewFile(fullPath);
+      folders.forEach((folder) => {
+        const card = document.createElement("div");
+        card.className =
+          "group flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-colors";
 
-      previewArea.innerHTML = `
-        <div class="w-12 h-12 mb-3 text-gray-400 group-hover:text-blue-500 transition-colors">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-        </div>
-        <span class="block w-full text-xs font-semibold text-gray-700 truncate text-center" title="${cleanFileName}">${cleanFileName}</span>
-      `;
+        card.draggable = isAdmin;
+        card.ondragstart = (e) => {
+          const folderFullPath = `${workspaceId}/${prefix}${folder.name}`;
+          e.dataTransfer.setData(
+            "application/json",
+            JSON.stringify({ path: folderFullPath, type: "folder" }),
+          );
+        };
 
-      const actions = document.createElement("div");
-      actions.className =
-        "flex justify-between items-center border-t border-gray-100 pt-3 mt-auto";
+        // Folder Drop Logic
+        card.ondragover = (e) => {
+          e.preventDefault();
+          card.classList.add("ring-2", "ring-blue-400", "bg-blue-100");
+        };
+        card.ondragleave = () =>
+          card.classList.remove("ring-2", "ring-blue-400", "bg-blue-100");
+        card.ondrop = (e) => {
+          e.preventDefault();
+          card.classList.remove("ring-2", "ring-blue-400", "bg-blue-100");
+          window.moveFileToFolder(e, folder.name);
+        };
 
-      if (isAdmin) {
-        actions.innerHTML = `
-          <button class="text-[11px] font-medium text-gray-500 hover:text-blue-600 px-1" onclick="event.stopPropagation(); window.triggerRename('${fullPath}', '${cleanFileName}')">Rename</button>
-          <button class="text-[11px] font-medium text-gray-500 hover:text-red-600 px-1" onclick="event.stopPropagation(); window.triggerDelete('${fullPath}')">Delete</button>
+        card.onclick = () => {
+          currentPath.push(folder.name);
+          refreshUI();
+        };
+        card.innerHTML = `
+          <svg class="w-8 h-8 text-blue-400 pointer-events-none" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+          <span class="text-sm font-medium text-gray-700 truncate pointer-events-none">${folder.name}</span>
         `;
-      } else {
-        actions.innerHTML = `<span class="text-[10px] font-bold uppercase text-gray-300 tracking-wider">Read Only</span>`;
-      }
+        folderGrid.appendChild(card);
+      });
+      folderSection.appendChild(folderGrid);
+      container.appendChild(folderSection);
+    }
 
-      // Append download icon
-      actions.innerHTML += `<button class="text-gray-400 hover:text-blue-600" onclick="event.stopPropagation(); window.triggerDownload('${fullPath}', '${cleanFileName}')" title="Download"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>`;
+    // Render Files Section
+    if (files.length > 0) {
+      const fileSection = document.createElement("div");
+      fileSection.innerHTML = `<h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Files</h3>`;
+      const fileGrid = document.createElement("div");
+      fileGrid.className =
+        "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5";
 
-      fileCard.appendChild(previewArea);
-      fileCard.appendChild(actions);
-      container.appendChild(fileCard);
-    });
+      files.forEach((file) => {
+        const cleanFileName = file.name.replace(/^\d+_/, "");
+        const fullPath = `${workspaceId}/${prefix}${file.name}`;
+
+        const card = document.createElement("div");
+        // File Drag Logic
+        card.draggable = isAdmin; // Only allow admins to drag files
+        card.draggable = isAdmin;
+        card.ondragstart = (e) => {
+          e.dataTransfer.setData(
+            "application/json",
+            JSON.stringify({ path: fullPath, type: "file" }),
+          );
+        };
+        card.className = `group flex flex-col justify-between p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-md transition-all ${isAdmin ? "cursor-grab active:cursor-grabbing" : ""}`;
+
+        card.innerHTML = `
+          <div class="mb-4 flex flex-col items-center cursor-pointer" onclick="window.triggerPreview('${fullPath}')">
+            <div class="w-12 h-12 mb-3 text-gray-400 group-hover:text-blue-500 transition-colors pointer-events-none">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            </div>
+            <span class="block w-full text-xs font-semibold text-gray-700 truncate text-center pointer-events-none" title="${cleanFileName}">${cleanFileName}</span>
+          </div>
+          <div class="flex justify-between items-center border-t border-gray-100 pt-3 mt-auto">
+            ${
+              isAdmin
+                ? `<button class="text-[11px] font-medium text-gray-500 hover:text-red-600 px-1" onclick="window.triggerDelete('${fullPath}')">Delete</button>`
+                : `<span class="text-[10px] font-bold uppercase text-gray-300 tracking-wider">Read Only</span>`
+            }
+            <button class="text-gray-400 hover:text-blue-600 ml-auto" onclick="window.triggerDownload('${fullPath}', '${cleanFileName}')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>
+          </div>
+        `;
+        fileGrid.appendChild(card);
+      });
+      fileSection.appendChild(fileGrid);
+      container.appendChild(fileSection);
+    }
   }
 
-  // --- File Action Handlers ---
-  window.triggerDelete = async (path) => {
-    if (!confirm("Delete this file?")) return;
+  // File Moving Logic
+  window.moveFileToFolder = async (e, targetFolderName) => {
+    // 1. Get the JSON data we set in ondragstart
+    const dragData = JSON.parse(
+      e.dataTransfer.getData("application/json") || "{}",
+    );
+    const oldPath = dragData.path;
+
+    if (!oldPath) return;
+
+    const fileName = oldPath.split("/").pop();
+    const workspaceId = getActiveWorkspaceId();
+    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+    const newPath = `${workspaceId}/${prefix}${targetFolderName}/${fileName}`;
+
+    // Prevent moving a folder into itself
+    if (
+      oldPath === newPath ||
+      oldPath === `${workspaceId}/${prefix}${targetFolderName}`
+    )
+      return;
+
+    uploadStatus.classList.remove("hidden");
+    uploadStatus.textContent = "Moving...";
+
     const supabase = await getSupabaseClient();
-    await supabase.storage.from("user_files").remove([path]);
+    await supabase.storage.from("user_files").move(oldPath, newPath);
+
+    uploadStatus.classList.add("hidden");
     loadFiles();
   };
 
-  window.triggerRename = async (oldPath, oldName) => {
-    const newName = prompt("New file name:", oldName);
-    if (!newName || newName === oldName) return;
-    const workspaceId = getActiveWorkspaceId();
-    const newPath = `${workspaceId}/${Date.now()}_${newName}`;
+  window.triggerPreview = async (path) => {
     const supabase = await getSupabaseClient();
-    await supabase.storage.from("user_files").move(oldPath, newPath);
-    loadFiles();
+    const { data } = await supabase.storage
+      .from("user_files")
+      .createSignedUrl(path, 60);
+    window.open(data.signedUrl, "_blank");
   };
 
   window.triggerDownload = async (path, fileName) => {
@@ -320,11 +544,10 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     document.body.removeChild(link);
   };
 
-  async function previewFile(path) {
+  window.triggerDelete = async (path) => {
+    if (!confirm("Delete this file?")) return;
     const supabase = await getSupabaseClient();
-    const { data } = await supabase.storage
-      .from("user_files")
-      .createSignedUrl(path, 60);
-    window.open(data.signedUrl, "_blank");
-  }
+    await supabase.storage.from("user_files").remove([path]);
+    loadFiles();
+  };
 </script>
