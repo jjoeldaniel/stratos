@@ -128,8 +128,18 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
   }
 
   function checkAdminPrivileges() {
+    // 1. If no organization is active, you are in your Personal Drive (always owner/admin)
     if (!window.Clerk.organization) return true;
-    return window.Clerk.organizationMember?.role === "org:admin";
+
+    // 2. Find the membership for the current active organization
+    const activeOrgId = window.Clerk.organization.id;
+    const membership = window.Clerk.user.organizationMemberships.find(
+      (m) => m.organization.id === activeOrgId,
+    );
+
+    // 3. Clerk roles usually look like 'org:admin' or 'admin'
+    const role = membership?.role;
+    return role === "admin" || role === "org:admin";
   }
 
   const waitForClerk = setInterval(() => {
