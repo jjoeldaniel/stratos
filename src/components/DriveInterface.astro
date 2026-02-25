@@ -2,13 +2,11 @@
 import { OrganizationSwitcher } from "@clerk/astro/components";
 ---
 
-<div class="flex h-[calc(100vh-73px)] w-full overflow-hidden">
-  <aside
-    class="w-48 md:w-64 p-4 hidden sm:flex flex-col gap-6 border-r bg-gray-50/50"
-  >
-    <div class="w-full">
+<div class="flex h-[calc(100vh-73px)] w-full overflow-hidden bg-white">
+  <aside class="w-64 p-5 hidden sm:flex flex-col border-r bg-gray-50/30">
+    <div class="mb-6">
       <p
-        class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2"
+        class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3"
       >
         Workspace
       </p>
@@ -17,19 +15,48 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         appearance={{
           elements: {
             organizationSwitcherTrigger:
-              "w-full justify-start border border-gray-200 bg-white shadow-sm",
+              "w-full justify-start border border-gray-200 bg-white shadow-sm rounded-lg py-2 px-3",
           },
         }}
       />
     </div>
 
-    <div>
-      <button
-        id="new-btn"
-        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm rounded-lg px-4 py-2.5 transition-all text-sm font-medium text-white w-full"
+    <button
+      id="new-btn"
+      class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm rounded-lg px-4 py-2.5 transition-all text-sm font-medium text-white w-full mb-8"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg
       >
+      Upload File
+    </button>
+    <input type="file" id="file-input" class="hidden" multiple />
+
+    <div id="team-section" class="flex-1 overflow-y-auto hidden">
+      <p
+        class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3"
+      >
+        Team Access
+      </p>
+      <ul id="team-members-list" class="space-y-3"></ul>
+    </div>
+  </aside>
+
+  <main
+    id="drive-main"
+    class="flex-1 relative p-8 overflow-y-auto transition-colors"
+  >
+    <div
+      id="drag-overlay"
+      class="absolute inset-4 rounded-2xl border-2 border-blue-400 border-dashed bg-blue-50/95 z-50 flex items-center justify-center hidden pointer-events-none transition-all"
+    >
+      <div class="text-center">
         <svg
-          class="w-5 h-5"
+          class="w-16 h-16 text-blue-500 mx-auto mb-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -37,45 +64,36 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          ></path></svg
         >
-        Upload File
-      </button>
-      <input type="file" id="file-input" class="hidden" multiple />
-    </div>
-  </aside>
-
-  <main
-    id="drive-main"
-    class="flex-1 relative p-6 overflow-y-auto bg-white transition-colors"
-  >
-    <div
-      id="drag-overlay"
-      class="absolute inset-2 rounded-xl border-2 border-blue-400 border-dashed bg-blue-50/90 z-50 flex items-center justify-center hidden pointer-events-none"
-    >
-      <div class="text-center">
         <p class="text-2xl font-semibold text-blue-700">
           Drop files to instantly upload
         </p>
       </div>
     </div>
 
-    <div class="flex justify-between items-end mb-6 border-b pb-2">
-      <h2 id="workspace-title" class="text-lg font-medium text-gray-800">
+    <div
+      class="flex justify-between items-end mb-8 border-b border-gray-100 pb-4"
+    >
+      <h2
+        id="workspace-title"
+        class="text-2xl font-semibold text-gray-800 tracking-tight"
+      >
         My Drive
       </h2>
-      <span id="upload-status" class="text-sm font-medium text-blue-600 hidden"
+      <span
+        id="upload-status"
+        class="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full hidden"
         >Uploading...</span
       >
     </div>
 
     <div
       id="file-list-container"
-      class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"
+      class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5"
     >
-      <p class="text-gray-500 col-span-full" id="loading-text">
-        Loading workspace...
-      </p>
+      <p class="text-gray-400 col-span-full text-sm">Loading workspace...</p>
     </div>
   </main>
 </div>
@@ -90,30 +108,25 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
   const fileInput = document.getElementById("file-input");
   const uploadStatus = document.getElementById("upload-status");
   const workspaceTitle = document.getElementById("workspace-title");
+  const teamSection = document.getElementById("team-section");
+  const teamMembersList = document.getElementById("team-members-list");
 
-  // Utility to get the current active workspace ID (either Org ID or User ID)
   function getActiveWorkspaceId() {
     return window.Clerk.organization?.id || window.Clerk.user.id;
   }
 
-  // Utility to get the workspace name for the UI
-  function updateWorkspaceTitle() {
-    workspaceTitle.textContent =
-      window.Clerk.organization?.name || "Personal Drive";
+  // Check if user is Org Admin OR in their Personal Drive
+  function checkAdminPrivileges() {
+    if (!window.Clerk.organization) return true; // You are admin of your personal drive
+    return window.Clerk.organizationMember?.role === "org:admin";
   }
 
   const waitForClerk = setInterval(() => {
     if (window.Clerk && window.Clerk.loaded) {
       clearInterval(waitForClerk);
       if (window.Clerk.user) {
-        updateWorkspaceTitle();
-        loadFiles();
-
-        // Listen for organization changes in the Clerk UI
-        window.Clerk.addListener(({ organization }) => {
-          updateWorkspaceTitle();
-          loadFiles();
-        });
+        refreshUI();
+        window.Clerk.addListener(() => refreshUI());
       } else {
         container.innerHTML =
           '<p class="text-gray-500 col-span-full">Please sign in.</p>';
@@ -121,7 +134,55 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     }
   }, 100);
 
-  // --- Drag and Drop Logic ---
+  function refreshUI() {
+    workspaceTitle.textContent =
+      window.Clerk.organization?.name || "Personal Drive";
+    loadFiles();
+    loadTeamMembers();
+  }
+
+  // --- Fetch Team Members for Sidebar ---
+  async function loadTeamMembers() {
+    if (!window.Clerk.organization) {
+      teamSection.classList.add("hidden");
+      return;
+    }
+
+    teamSection.classList.remove("hidden");
+    teamMembersList.innerHTML =
+      '<p class="text-xs text-gray-400">Loading team...</p>';
+
+    try {
+      const { data: memberships } =
+        await window.Clerk.organization.getMemberships();
+      teamMembersList.innerHTML = "";
+
+      memberships.forEach((member) => {
+        const li = document.createElement("li");
+        li.className = "flex items-center gap-3";
+
+        const isSelf = member.publicUserData.userId === window.Clerk.user.id;
+        const roleColor =
+          member.role === "org:admin"
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-500 bg-gray-100";
+        const roleLabel = member.role === "org:admin" ? "Admin" : "Viewer";
+
+        li.innerHTML = `
+          <img src="${member.publicUserData.imageUrl}" class="w-7 h-7 rounded-full border border-gray-200" alt="Avatar">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-gray-700 truncate">${member.publicUserData.firstName} ${isSelf ? "(You)" : ""}</p>
+            <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${roleColor}">${roleLabel}</span>
+          </div>
+        `;
+        teamMembersList.appendChild(li);
+      });
+    } catch (e) {
+      console.error("Failed to load members", e);
+    }
+  }
+
+  // --- Drag & Drop ---
   let dragCounter = 0;
   driveMain.addEventListener("dragenter", (e) => {
     e.preventDefault();
@@ -144,9 +205,9 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
   newBtn.addEventListener("click", () => fileInput.click());
   fileInput.addEventListener("change", (e) => handleUpload(e.target.files));
 
-  // --- Core Functions ---
+  // --- Upload ---
   async function handleUpload(files) {
-    if (!files || files.length === 0 || !window.Clerk?.user) return;
+    if (!files || files.length === 0) return;
     const workspaceId = getActiveWorkspaceId();
     const supabase = await getSupabaseClient();
 
@@ -155,24 +216,21 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
 
     for (const file of files) {
       const filePath = `${workspaceId}/${Date.now()}_${file.name}`;
-      const { error } = await supabase.storage
-        .from("user_files")
-        .upload(filePath, file);
-      if (error) console.error("Upload Error:", error);
+      await supabase.storage.from("user_files").upload(filePath, file);
     }
 
     uploadStatus.textContent = "Upload complete!";
-    setTimeout(() => uploadStatus.classList.add("hidden"), 3000);
+    setTimeout(() => uploadStatus.classList.add("hidden"), 2000);
     loadFiles();
   }
 
+  // --- File Grid & Permissions ---
   async function loadFiles() {
     const workspaceId = getActiveWorkspaceId();
     const supabase = await getSupabaseClient();
+    const isAdmin = checkAdminPrivileges();
 
-    container.innerHTML =
-      '<p class="text-gray-500 col-span-full">Loading...</p>';
-
+    container.innerHTML = "";
     const { data, error } = await supabase.storage
       .from("user_files")
       .list(workspaceId, {
@@ -180,22 +238,15 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         sortBy: { column: "created_at", order: "desc" },
       });
 
-    if (error) {
-      container.innerHTML =
-        '<p class="text-red-500 col-span-full">Failed to load workspace files.</p>';
-      return;
-    }
+    if (error)
+      return (container.innerHTML =
+        '<p class="text-red-500 text-sm">Failed to load files.</p>');
 
     const validFiles =
       data?.filter((f) => f.name !== ".emptyFolderPlaceholder") || [];
-
-    if (validFiles.length === 0) {
-      container.innerHTML =
-        '<div class="col-span-full py-20 text-center text-gray-400">This workspace is empty.</div>';
-      return;
-    }
-
-    container.innerHTML = "";
+    if (validFiles.length === 0)
+      return (container.innerHTML =
+        '<div class="col-span-full py-20 text-center text-gray-400 text-sm">This workspace is empty.</div>');
 
     validFiles.forEach((file) => {
       const cleanFileName = file.name.replace(/^\d+_/, "");
@@ -203,43 +254,34 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
 
       const fileCard = document.createElement("div");
       fileCard.className =
-        "group flex flex-col justify-between p-3 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-blue-50 transition-colors";
+        "group flex flex-col justify-between p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-md transition-all";
 
       const previewArea = document.createElement("div");
-      previewArea.className = "cursor-pointer mb-3";
+      previewArea.className = "cursor-pointer mb-4 flex flex-col items-center";
       previewArea.onclick = () => previewFile(fullPath);
 
-      const iconWrapper = document.createElement("div");
-      iconWrapper.className =
-        "flex items-center justify-center h-16 mb-2 text-gray-400 group-hover:text-blue-500";
-      iconWrapper.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>`;
-
-      const fileNameDisplay = document.createElement("span");
-      fileNameDisplay.className =
-        "block text-sm font-medium text-gray-700 truncate text-center";
-      fileNameDisplay.textContent = cleanFileName;
-
-      previewArea.appendChild(iconWrapper);
-      previewArea.appendChild(fileNameDisplay);
+      previewArea.innerHTML = `
+        <div class="w-12 h-12 mb-3 text-gray-400 group-hover:text-blue-500 transition-colors">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        </div>
+        <span class="block w-full text-xs font-semibold text-gray-700 truncate text-center" title="${cleanFileName}">${cleanFileName}</span>
+      `;
 
       const actions = document.createElement("div");
       actions.className =
-        "flex justify-between items-center border-t border-gray-200 pt-2 mt-auto";
+        "flex justify-between items-center border-t border-gray-100 pt-3 mt-auto";
 
-      const renameBtn = document.createElement("button");
-      renameBtn.className =
-        "text-xs font-medium text-gray-500 hover:text-blue-600";
-      renameBtn.textContent = "Rename";
-      renameBtn.onclick = () => renameFile(fullPath, cleanFileName);
+      if (isAdmin) {
+        actions.innerHTML = `
+          <button class="text-[11px] font-medium text-gray-500 hover:text-blue-600 px-1" onclick="event.stopPropagation(); window.triggerRename('${fullPath}', '${cleanFileName}')">Rename</button>
+          <button class="text-[11px] font-medium text-gray-500 hover:text-red-600 px-1" onclick="event.stopPropagation(); window.triggerDelete('${fullPath}')">Delete</button>
+        `;
+      } else {
+        actions.innerHTML = `<span class="text-[10px] font-bold uppercase text-gray-300 tracking-wider">Read Only</span>`;
+      }
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className =
-        "text-xs font-medium text-gray-500 hover:text-red-600";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = () => deleteFile(fullPath);
-
-      actions.appendChild(renameBtn);
-      actions.appendChild(deleteBtn);
+      // Append download icon
+      actions.innerHTML += `<button class="text-gray-400 hover:text-blue-600" onclick="event.stopPropagation(); window.triggerDownload('${fullPath}', '${cleanFileName}')" title="Download"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>`;
 
       fileCard.appendChild(previewArea);
       fileCard.appendChild(actions);
@@ -247,22 +289,15 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     });
   }
 
-  async function previewFile(path) {
-    const supabase = await getSupabaseClient();
-    const { data, error } = await supabase.storage
-      .from("user_files")
-      .createSignedUrl(path, 60);
-    if (!error) window.open(data.signedUrl, "_blank");
-  }
-
-  async function deleteFile(path) {
+  // --- File Action Handlers ---
+  window.triggerDelete = async (path) => {
     if (!confirm("Delete this file?")) return;
     const supabase = await getSupabaseClient();
     await supabase.storage.from("user_files").remove([path]);
     loadFiles();
-  }
+  };
 
-  async function renameFile(oldPath, oldName) {
+  window.triggerRename = async (oldPath, oldName) => {
     const newName = prompt("New file name:", oldName);
     if (!newName || newName === oldName) return;
     const workspaceId = getActiveWorkspaceId();
@@ -270,5 +305,26 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     const supabase = await getSupabaseClient();
     await supabase.storage.from("user_files").move(oldPath, newPath);
     loadFiles();
+  };
+
+  window.triggerDownload = async (path, fileName) => {
+    const supabase = await getSupabaseClient();
+    const { data } = await supabase.storage
+      .from("user_files")
+      .createSignedUrl(path, 60);
+    const link = document.createElement("a");
+    link.href = data.signedUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  async function previewFile(path) {
+    const supabase = await getSupabaseClient();
+    const { data } = await supabase.storage
+      .from("user_files")
+      .createSignedUrl(path, 60);
+    window.open(data.signedUrl, "_blank");
   }
 </script>
