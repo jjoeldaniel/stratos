@@ -724,36 +724,94 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     }
   });
 
-  async function loadFiles() {
+  async function loadFiles(searchQuery = "") {
     const workspaceId = getActiveWorkspaceId();
     const supabase = await getSupabaseClient();
     const isAdmin = checkAdminPrivileges();
     const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
-    const searchPath = `${workspaceId}${
-      prefix ? "/" + prefix.slice(0, -1) : ""
-    }`;
 
     container.innerHTML = '<p class="text-gray-400 text-sm">Loading...</p>';
-    const { data, error } = await supabase.storage
-      .from("user_files")
-      .list(searchPath, {
-        limit: 100,
-        sortBy: { column: "created_at", order: "desc" },
-      });
 
-    if (error)
-      return (container.innerHTML =
-        '<p class="text-red-500 text-sm">Failed to load folder.</p>');
+    let folders = [];
+    let files = [];
 
-    const validItems =
-      data?.filter((f) => f.name !== ".emptyFolderPlaceholder") || [];
-    if (validItems.length === 0)
-      return (container.innerHTML =
-        '<div class="py-10 text-center text-gray-400 text-sm w-full border-2 border-dashed border-gray-100 rounded-xl">This folder is empty.</div>');
+    if (searchQuery) {
+      // Recursive search across the workspace
+      let allFiles = [];
+      const queue = [workspaceId];
+
+      while (queue.length > 0) {
+        const currentDir = queue.shift();
+        const { data, error } = await supabase.storage
+          .from("user_files")
+          .list(currentDir, { limit: 100 });
+
+        if (data) {
+          for (const item of data) {
+            if (item.name === ".emptyFolderPlaceholder") continue;
+
+            if (!item.id) {
+              // it's a folder, enqueue it
+              queue.push(`${currentDir}/${item.name}`);
+            } else {
+              // it's a file, check if it matches search
+              const cleanName = item.name.replace(/^\d+_/, "");
+              if (cleanName.toLowerCase().includes(searchQuery.toLowerCase())) {
+                allFiles.push({
+                  ...item,
+                  name: item.name,
+                  displayPath: `${currentDir.replace(
+                    workspaceId,
+                    ""
+                  )}/${cleanName}`.substring(1),
+                  fullPath: `${currentDir}/${item.name}`,
+                });
+              }
+            }
+          }
+        }
+      }
+      files = allFiles;
+      // We do not show folders in search results per request
+      folders = [];
+
+      if (files.length === 0) {
+        return (container.innerHTML = `<div class="py-10 text-center text-gray-400 text-sm w-full border-2 border-dashed border-gray-100 rounded-xl">
+            <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            No files match your search "${searchQuery}".
+          </div>`);
+      }
+    } else {
+      // Normal single-directory load
+      const searchPath = `${workspaceId}${
+        prefix ? "/" + prefix.slice(0, -1) : ""
+      }`;
+      const { data, error } = await supabase.storage
+        .from("user_files")
+        .list(searchPath, {
+          limit: 100,
+          sortBy: { column: "created_at", order: "desc" },
+        });
+
+      if (error)
+        return (container.innerHTML =
+          '<p class="text-red-500 text-sm">Failed to load folder.</p>');
+
+      const validItems =
+        data?.filter((f) => !f.name.endsWith(".emptyFolderPlaceholder")) || [];
+
+      if (validItems.length === 0) {
+        return (container.innerHTML =
+          '<div class="py-10 text-center text-gray-400 text-sm w-full border-2 border-dashed border-gray-100 rounded-xl">This folder is empty.</div>');
+      }
+
+      folders = validItems.filter((item) => !item.id);
+      files = validItems
+        .filter((item) => item.id)
+        .map((f) => ({ ...f, fullPath: `${searchPath}/${f.name}` }));
+    }
 
     container.innerHTML = "";
-    const folders = validItems.filter((item) => !item.id);
-    const files = validItems.filter((item) => item.id);
 
     // Render Folders Section
     if (folders.length > 0) {
@@ -764,18 +822,19 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4";
 
       folders.forEach((folder) => {
+        const folderDisplayName = folder.name.replace(/\/$/, "");
+        const folderFullPath = searchQuery
+          ? `${workspaceId}/${folder.name}`
+          : `${workspaceId}/${prefix}${folder.name}`;
+
         const card = document.createElement("div");
         card.className =
           "group flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-colors";
-        card.setAttribute(
-          "data-item-path",
-          `${workspaceId}/${prefix}${folder.name}`
-        );
-        card.setAttribute("data-item-name", folder.name);
+        card.setAttribute("data-item-path", folderFullPath);
+        card.setAttribute("data-item-name", folderDisplayName);
         card.setAttribute("data-item-type", "folder");
         card.draggable = isAdmin;
         card.ondragstart = (e) => {
-          const folderFullPath = `${workspaceId}/${prefix}${folder.name}`;
           e.dataTransfer.setData(
             "application/json",
             JSON.stringify({ path: folderFullPath, type: "folder" })
@@ -792,16 +851,22 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         card.ondrop = (e) => {
           e.preventDefault();
           card.classList.remove("ring-2", "ring-blue-400", "bg-blue-100");
-          window.moveFileToFolder(e, folder.name);
+          window.moveFileToFolder(e, folderDisplayName);
         };
 
         card.onclick = () => {
-          currentPath.push(folder.name);
+          if (searchQuery) {
+            const globalSearch = document.getElementById("global-search");
+            if (globalSearch) globalSearch.value = "";
+            currentPath = folderDisplayName.split("/").filter(Boolean);
+          } else {
+            currentPath.push(folderDisplayName);
+          }
           refreshUI();
         };
         card.innerHTML = `
           <svg class="w-10 h-10 text-blue-400/80 pointer-events-none drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
-          <span class="text-sm font-semibold text-slate-700 truncate pointer-events-none group-hover:text-blue-600 transition-colors">${folder.name}</span>
+          <span class="text-sm font-semibold text-slate-700 truncate pointer-events-none group-hover:text-blue-600 transition-colors" title="${folderDisplayName}">${folderDisplayName}</span>
         `;
         folderGrid.appendChild(card);
       });
@@ -818,8 +883,10 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5";
 
       files.forEach((file) => {
-        const cleanFileName = file.name.replace(/^\d+_/, "");
-        const fullPath = `${workspaceId}/${prefix}${file.name}`;
+        const fullPath = file.fullPath;
+        const baseName = file.name.split("/").pop();
+        const cleanFileName = baseName.replace(/^\d+_/, "");
+        const displayName = searchQuery ? file.displayPath : cleanFileName;
 
         const card = document.createElement("div");
         card.setAttribute("data-item-path", fullPath);
@@ -827,7 +894,6 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         card.setAttribute("data-item-type", "file");
         // File Drag Logic
         card.draggable = isAdmin; // Only allow admins to drag files
-        card.draggable = isAdmin;
         card.ondragstart = (e) => {
           e.dataTransfer.setData(
             "application/json",
@@ -843,7 +909,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
             <div class="w-12 h-12 mb-3 text-gray-400 group-hover:text-blue-500 transition-colors pointer-events-none">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
             </div>
-            <span class="block w-full text-xs font-semibold text-gray-700 truncate text-center pointer-events-none" title="${cleanFileName}">${cleanFileName}</span>
+            <span class="block w-full text-xs font-semibold text-gray-700 truncate text-center pointer-events-none" title="${displayName}">${displayName}</span>
           </div>
           <div class="flex justify-between items-center border-t border-gray-100 pt-3 mt-auto">
             ${
@@ -1000,4 +1066,17 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     uploadStatus.classList.add("hidden");
     loadFiles();
   };
+
+  // Search filtering logic
+  const globalSearch = document.getElementById("global-search");
+  let searchTimeout;
+  if (globalSearch) {
+    globalSearch.addEventListener("input", (e) => {
+      const query = (e.target.value || "").trim().toLowerCase();
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        loadFiles(query);
+      }, 300);
+    });
+  }
 </script>
