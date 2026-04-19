@@ -427,6 +427,43 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         </svg>
       </button>
     </div>
+  <!-- Preview navigation arrows -->
+      <button
+      id="preview-prev"
+      class="absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 backdrop-blur-md transition-colors shadow-lg z-[260] hidden"
+      title="Previous (←)"
+      aria-label="Previous file"
+      >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 19l-7-7 7-7"></path>
+      </svg>
+      </button>
+      <button
+      id="preview-next"
+      class="absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 backdrop-blur-md transition-colors shadow-lg z-[260] hidden"
+      title="Next (→)"
+      aria-label="Next file"
+      >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5l7 7-7 7"></path>
+      </svg>
+      </button>
     <div
       id="preview-content-container"
       class="w-full h-[85vh] flex items-center justify-center"
@@ -1603,7 +1640,48 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
   );
   const previewClose = document.getElementById("preview-close");
   const previewDownloadBtn = document.getElementById("preview-download");
+  const previewPrevBtn = document.getElementById("preview-prev");
+  const previewNextBtn = document.getElementById("preview-next");
 
+  // State for preview navigation
+  let previewSiblings = []; // [{ path, name }, ...] — snapshot at open time
+  let previewIndex = -1;
+
+  function collectPreviewableSiblings() {
+    const cards = document.querySelectorAll(
+      '[data-item-path][data-item-type="file"]'
+    );
+    const siblings = [];
+    cards.forEach((card) => {
+      const path = card.getAttribute("data-item-path");
+      const name = card.getAttribute("data-item-name") || "";
+      const extMatch = name.match(/\.([^.]+)$/);
+      const ext = extMatch ? extMatch[1].toLowerCase() : "";
+      if (/^(png|jpe?g|gif|webp|svg|pdf)$/.test(ext)) {
+        siblings.push({ path, name });
+      }
+    });
+    return siblings;
+  }
+
+  function updatePreviewNavVisibility() {
+    const hasMultiple = previewSiblings.length > 1;
+    if (previewPrevBtn)
+      previewPrevBtn.classList.toggle("hidden", !hasMultiple);
+    if (previewNextBtn)
+      previewNextBtn.classList.toggle("hidden", !hasMultiple);
+  }
+
+  function showPreviewAtOffset(delta) {
+    if (previewSiblings.length === 0) return;
+    const len = previewSiblings.length;
+    // Wrap-around modulo (handles negative delta too)
+    previewIndex = ((previewIndex + delta) % len + len) % len;
+    window.triggerPreview(previewSiblings[previewIndex].path);
+  }
+
+  if (previewPrevBtn) previewPrevBtn.onclick = () => showPreviewAtOffset(-1);
+  if (previewNextBtn) previewNextBtn.onclick = () => showPreviewAtOffset(1);
   if (previewClose && previewModal) {
     previewClose.onclick = () => {
       previewModal.classList.remove("opacity-100");
@@ -1615,10 +1693,17 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     };
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !previewModal.classList.contains("hidden")) {
-        previewClose.click();
-      }
-    });
+  if (previewModal.classList.contains("hidden")) return;
+  if (e.key === "Escape") {
+    previewClose.click();
+  } else if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    showPreviewAtOffset(-1);
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault();
+    showPreviewAtOffset(1);
+  }
+});
   }
 
   window.triggerPreview = async (path) => {
@@ -1634,6 +1719,16 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
 
     if (isImage || isPdf) {
       if (!previewModal) return window.open(data.signedUrl, "_blank");
+      // Snapshot siblings on first open; just update the index on subsequent nav
+      const isOpening = previewModal.classList.contains("hidden");
+      if (isOpening) previewSiblings = collectPreviewableSiblings();
+      previewIndex = previewSiblings.findIndex((s) => s.path === path);
+      if (previewIndex === -1) {
+        // Path not in current snapshot (DOM changed) — refresh
+        previewSiblings = collectPreviewableSiblings();
+        previewIndex = previewSiblings.findIndex((s) => s.path === path);
+      }
+  updatePreviewNavVisibility();
 
       previewModal.classList.remove("hidden");
       previewModal.classList.add("flex");
