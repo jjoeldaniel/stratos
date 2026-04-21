@@ -22,3 +22,16 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+package.json
+package-lock.json
+.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-wal
+.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-shm
+.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite
+.wrangler/state/v3/images/miniflare-images-KVNamespaceObject/metadata.sqlite-wal
+.wrangler/state/v3/images/miniflare-images-KVNamespaceObject/metadata.sqlite-shm
+.wrangler/state/v3/images/miniflare-images-KVNamespaceObject/metadata.sqlite
+.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-wal
+.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-shm
+.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite
+.dev.vars
+package.json
