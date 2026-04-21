@@ -266,6 +266,24 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         <span id="cm-download-text">Download</span>
       </button>
       <button
+        id="cm-copy"
+        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+          ></path>
+        </svg>
+        <span id="cm-copy-text">Duplicate</span>
+      </button>
+      <button
         id="cm-pin"
         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2"
       >
@@ -1088,6 +1106,13 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     document.getElementById("cm-delete").classList.toggle("hidden", !isAdmin);
 
     document
+      .getElementById("cm-copy")
+      .classList.toggle(
+        "hidden",
+        !isAdmin || currentTargetItem.type === "folder"
+      );
+
+    document
       .getElementById("cm-pin")
       .classList.toggle("hidden", currentTargetItem.type !== "folder");
     document
@@ -1114,6 +1139,10 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     document.getElementById("cm-delete-text").textContent = isMulti
       ? `Delete (${selectedItems.size})`
       : "Delete";
+
+    document.getElementById("cm-copy-text").textContent = isMulti
+      ? `Duplicate (${selectedItems.size})`
+      : "Duplicate";
 
     // Position and show menu
     contextMenu.style.top = `${e.clientY}px`;
@@ -1215,6 +1244,101 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
       hideContextMenu();
     }
   };
+  document.getElementById("cm-copy").onclick = async () => {
+  if (!currentTargetItem) return;
+
+  const supabase = await getSupabaseClient();
+  const isMulti =
+    selectedItems.has(currentTargetItem.path) && selectedItems.size > 1;
+
+  // Files only — filter out folders from the selection
+  const pathsToCopy = isMulti
+    ? Array.from(selectedItems).filter((p) => window.itemMetadataMap[p]?.id)
+    : [currentTargetItem.path];
+
+  if (pathsToCopy.length === 0) {
+    hideContextMenu();
+    return;
+  }
+
+  const total = pathsToCopy.length;
+  const failed = [];
+  let done = 0;
+
+  uploadStatus.classList.remove("hidden");
+
+  for (const sourcePath of pathsToCopy) {
+    done++;
+    uploadStatus.textContent =
+      total === 1 ? "Duplicating..." : `Duplicating ${done} of ${total}...`;
+
+    try {
+      const destPath = await generateCopyPath(supabase, sourcePath);
+      const { error } = await supabase.storage
+        .from("user_files")
+        .copy(sourcePath, destPath);
+      if (error) {
+        console.error(`Copy failed for "${sourcePath}":`, error);
+        failed.push({
+          name: sourcePath.split("/").pop(),
+          message: error.message,
+        });
+      }
+    } catch (err) {
+      console.error(`Copy threw for "${sourcePath}":`, err);
+      failed.push({
+        name: sourcePath.split("/").pop(),
+        message: err?.message || "Unknown error",
+      });
+    }
+  }
+
+  if (failed.length === 0) {
+    uploadStatus.classList.add("hidden");
+  } else {
+    const successCount = total - failed.length;
+    uploadStatus.textContent =
+      failed.length === total
+        ? `Duplicate failed (${failed.length}). Check console.`
+        : `Duplicated ${successCount} of ${total}. ${failed.length} failed — check console.`;
+    setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+  }
+
+  selectedItems.clear();
+  hideContextMenu();
+  loadFiles();
+};
+
+/**
+ * Given a source path like "{workspaceId}/{prefix}{timestamp}_{filename}",
+ * returns a collision-free destination path with "(copy)" / "(copy 2)" suffix.
+ */
+async function generateCopyPath(supabase, sourcePath) {
+  const parts = sourcePath.split("/");
+  const storedName = parts.pop(); // "{timestamp}_{filename}"
+  const dir = parts.join("/");
+
+  const cleanName = storedName.replace(/^\d+_/, "");
+  const extMatch = cleanName.match(/\.([^.]+)$/);
+  const ext = extMatch ? `.${extMatch[1]}` : "";
+  const base = ext ? cleanName.slice(0, -ext.length) : cleanName;
+
+  const { data: existing } = await supabase.storage
+    .from("user_files")
+    .list(dir, { limit: 1000 });
+  const existingCleanNames = (existing || []).map((f) =>
+    f.name.replace(/^\d+_/, "")
+  );
+
+  let candidate = `${base} (copy)${ext}`;
+  let n = 2;
+  while (existingCleanNames.includes(candidate)) {
+    candidate = `${base} (copy ${n})${ext}`;
+    n++;
+  }
+
+  return `${dir}/${Date.now()}_${candidate}`;
+}
   document.getElementById("cm-delete").onclick = async () => {
     if (currentTargetItem) {
       if (selectedItems.has(currentTargetItem.path) && selectedItems.size > 1) {
