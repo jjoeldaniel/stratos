@@ -1397,37 +1397,88 @@ async function generateCopyPath(supabase, sourcePath) {
   fileInput.addEventListener("change", (e) => handleUpload(e.target.files));
 
   newFolderBtn.addEventListener("click", async () => {
-    const folderName = await showModal({
-      type: "prompt",
-      title: "New Folder",
-      confirmText: "Create",
-    });
-    if (!folderName) return;
-    const workspaceId = getActiveWorkspaceId();
-    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
-    const dummyPath = `${workspaceId}/${prefix}${folderName}/.emptyFolderPlaceholder`;
-    const supabase = await getSupabaseClient();
-    await supabase.storage.from("user_files").upload(dummyPath, new Blob([""]));
-    loadFiles();
+  const folderName = await showModal({
+    type: "prompt",
+    title: "New Folder",
+    confirmText: "Create",
   });
+  if (!folderName) return;
+  const workspaceId = getActiveWorkspaceId();
+  const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+  const dummyPath = `${workspaceId}/${prefix}${folderName}/.emptyFolderPlaceholder`;
+  const supabase = await getSupabaseClient();
+
+  uploadStatus.classList.remove("hidden");
+  uploadStatus.textContent = "Creating folder...";
+  try {
+    const { error } = await supabase.storage
+      .from("user_files")
+      .upload(dummyPath, new Blob([""]));
+    if (error) {
+      console.error(`Failed to create folder "${folderName}":`, error);
+      uploadStatus.textContent = `Failed to create folder: ${error.message}`;
+      setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+      return;
+    }
+    uploadStatus.classList.add("hidden");
+  } catch (err) {
+    console.error(`Folder creation threw for "${folderName}":`, err);
+    uploadStatus.textContent = `Failed to create folder: ${err?.message || "Unknown error"}`;
+    setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+    return;
+  }
+  loadFiles();
+});
 
   async function handleUpload(files) {
-    if (!files || files.length === 0) return;
-    const workspaceId = getActiveWorkspaceId();
-    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
-    const supabase = await getSupabaseClient();
+  if (!files || files.length === 0) return;
+  const workspaceId = getActiveWorkspaceId();
+  const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+  const supabase = await getSupabaseClient();
 
-    uploadStatus.classList.remove("hidden");
-    uploadStatus.textContent = "Uploading...";
+  const total = files.length;
+  const failed = [];
 
-    for (const file of files) {
-      const filePath = `${workspaceId}/${prefix}${Date.now()}_${file.name}`;
-      await supabase.storage.from("user_files").upload(filePath, file);
+  uploadStatus.classList.remove("hidden");
+
+  let i = 0;
+  for (const file of files) {
+    i++;
+    uploadStatus.textContent =
+      total === 1 ? "Uploading..." : `Uploading ${i} of ${total}...`;
+
+    const filePath = `${workspaceId}/${prefix}${Date.now()}_${file.name}`;
+    try {
+      const { error } = await supabase.storage
+        .from("user_files")
+        .upload(filePath, file);
+      if (error) {
+        console.error(`Upload failed for "${file.name}":`, error);
+        failed.push({ name: file.name, message: error.message });
+      }
+    } catch (err) {
+      console.error(`Upload threw for "${file.name}":`, err);
+      failed.push({
+        name: file.name,
+        message: err?.message || "Unknown error",
+      });
     }
-
-    uploadStatus.classList.add("hidden");
-    loadFiles();
   }
+
+  if (failed.length === 0) {
+    uploadStatus.classList.add("hidden");
+  } else {
+    const successCount = total - failed.length;
+    uploadStatus.textContent =
+      failed.length === total
+        ? `Upload failed (${failed.length} file${failed.length === 1 ? "" : "s"}). Check console for details.`
+        : `Uploaded ${successCount} of ${total}. ${failed.length} failed — check console.`;
+    // Auto-hide the error banner after 6s so it doesn't get stuck
+    setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+  }
+
+  loadFiles();
+}
 
   // --- Targeted Drag & Drop Logic ---
   let dragCounter = 0;
