@@ -2158,5 +2158,92 @@ async function generateCopyPath(supabase, sourcePath) {
         loadFiles(query);
       }, 300);
     });
-  }
+  };
+
+  document.addEventListener("keydown", (e) => {
+    const target = e.target;
+    const isTyping =
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.isContentEditable;
+
+    // Don't intercept browser shortcuts (Cmd/Ctrl/Alt combos)
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    // Esc: close the custom modal if open
+    // (the preview modal has its own Esc handler higher up in this file)
+    if (e.key === "Escape") {
+      const customModal = document.getElementById("custom-modal");
+      if (customModal && !customModal.classList.contains("hidden")) {
+        const cancel = document.getElementById("modal-cancel");
+        if (cancel) cancel.click();
+        e.preventDefault();
+      }
+      return;
+    }
+
+    // Skip the rest if the user is typing in a field
+    if (isTyping) return;
+
+    // "/" — focus the global search input
+    if (e.key === "/") {
+      const search = document.getElementById("global-search");
+      if (search) {
+        e.preventDefault();
+        search.focus();
+      }
+      return;
+    }
+
+    // "n" — new folder
+    if (e.key === "n") {
+      const btn = document.getElementById("new-folder-btn");
+      if (btn) {
+        e.preventDefault();
+        btn.click();
+      }
+      return;
+    }
+
+    // "u" — upload file
+    if (e.key === "u") {
+      const btn = document.getElementById("new-file-btn");
+      if (btn) {
+        e.preventDefault();
+        btn.click();
+      }
+      return;
+    }
+
+    // "s" — toggle select mode
+    if (e.key === "s") {
+      const btn = document.getElementById("toggle-select-mode");
+      if (btn) {
+        e.preventDefault();
+        btn.click();
+      }
+      return;
+    }
+
+    // "?" — show keyboard shortcuts help
+    if (e.key === "?") {
+      e.preventDefault();
+      showModal({
+        type: "info",
+        title: "Keyboard Shortcuts",
+        html: `
+          <div class="space-y-2 text-sm text-gray-700">
+            <div class="flex justify-between items-center"><span>Focus search</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">/</kbd></div>
+            <div class="flex justify-between items-center"><span>New folder</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">N</kbd></div>
+            <div class="flex justify-between items-center"><span>Upload file</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">U</kbd></div>
+            <div class="flex justify-between items-center"><span>Toggle select mode</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">S</kbd></div>
+            <div class="flex justify-between items-center"><span>Close modal</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">Esc</kbd></div>
+            <div class="flex justify-between items-center"><span>Show this help</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">?</kbd></div>
+          </div>
+        `,
+        confirmText: "Close",
+      });
+      return;
+    }
+  });
 </script>
