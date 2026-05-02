@@ -2170,7 +2170,7 @@ async function generateCopyPath(supabase, sourcePath) {
     // Don't intercept browser shortcuts (Cmd/Ctrl/Alt combos)
     if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-    // Esc: close the custom modal if open
+    // Esc: close the custom modal if open, otherwise blur any focused input
     // (the preview modal has its own Esc handler higher up in this file)
     if (e.key === "Escape") {
       const customModal = document.getElementById("custom-modal");
@@ -2178,13 +2178,16 @@ async function generateCopyPath(supabase, sourcePath) {
         const cancel = document.getElementById("modal-cancel");
         if (cancel) cancel.click();
         e.preventDefault();
+        return;
+      }
+
+      // No modal open — if user is stuck typing in an input, let Esc free them
+      if (isTyping) {
+        target.blur();
+        e.preventDefault();
       }
       return;
     }
-
-    // Skip the rest if the user is typing in a field
-    if (isTyping) return;
-
     // "/" — focus the global search input
     if (e.key === "/") {
       const search = document.getElementById("global-search");
@@ -2237,7 +2240,7 @@ async function generateCopyPath(supabase, sourcePath) {
             <div class="flex justify-between items-center"><span>New folder</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">N</kbd></div>
             <div class="flex justify-between items-center"><span>Upload file</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">U</kbd></div>
             <div class="flex justify-between items-center"><span>Toggle select mode</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">S</kbd></div>
-            <div class="flex justify-between items-center"><span>Close modal</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">Esc</kbd></div>
+            <div class="flex justify-between items-center"><span>Close modal / unfocus input</span><kbd class="...">Esc</kbd></div>
             <div class="flex justify-between items-center"><span>Show this help</span><kbd class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">?</kbd></div>
           </div>
         `,
