@@ -3,7 +3,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
 ---
 
 <div
-  class="flex relative h-[calc(100vh-73px)] w-full overflow-hidden bg-slate-50/50"
+  class="flex relative h-full w-full overflow-hidden bg-transparent border-t border-white/40"
 >
   <!-- Mobile Overlay -->
   <div
@@ -14,11 +14,11 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
 
   <aside
     id="mobile-sidebar"
-    class="w-64 p-6 flex flex-col border-r border-slate-200/60 bg-white shadow-[4px_0_12px_-4px_rgba(0,0,0,0.1)] z-40 absolute inset-y-0 left-0 -translate-x-full sm:translate-x-0 sm:relative sm:shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out"
+    class="w-64 p-6 flex flex-col border-r border-slate-200/60 bg-white/50 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.1)] z-40 absolute inset-y-0 left-0 -translate-x-full sm:translate-x-0 sm:relative sm:shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out"
   >
     <div class="mb-6">
       <p
-        class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 mt-1"
+        class="text-[11px] font-bold text-white uppercase tracking-widest mb-3 mt-1"
       >
         Workspace
       </p>
@@ -119,7 +119,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         </button>
         <nav
           id="breadcrumbs"
-          class="flex flex-wrap items-center gap-2 text-xl font-semibold text-gray-800 tracking-tight"
+          class="flex flex-wrap items-center gap-2 text-xl font-semibold text-white tracking-tight"
         >
         </nav>
       </div>
@@ -147,7 +147,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     </div>
 
     <div id="file-list-container" class="space-y-8">
-      <p class="text-slate-400 text-sm flex items-center gap-2 mb-8">
+      <p class="text-white/70 text-sm flex items-center gap-2 mb-8">
         <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"
           ><circle
             class="opacity-25"
