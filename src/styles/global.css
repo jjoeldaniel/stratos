@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+:root {
+  --cl-color-primary: #000000 !important;
+}
+
+.cl-userButtonPopoverCard {
+  --cl-color-text-secondary: #000000 !important;
+}
+
+.cl-userButtonPopoverActionButtonIcon,
+.cl-userButtonPopoverNavigationButtonIcon {
+  color: #000000 !important;
+}
+
+.cl-dev-badge, 
+[data-clerk-theme="light"] .cl-internal-1dauvqw {
+  background-color: #e4e4e7 !important;
+  color: #52525b !important;
+}
