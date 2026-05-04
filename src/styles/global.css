@@ -9,22 +9,3 @@
   object-fit: cover;
   z-index: -1;
 }
-
-:root {
-  --cl-color-primary: #000000 !important;
-}
-
-.cl-userButtonPopoverCard {
-  --cl-color-text-secondary: #000000 !important;
-}
-
-.cl-userButtonPopoverActionButtonIcon,
-.cl-userButtonPopoverNavigationButtonIcon {
-  color: #000000 !important;
-}
-
-.cl-dev-badge, 
-[data-clerk-theme="light"] .cl-internal-1dauvqw {
-  background-color: #e4e4e7 !important;
-  color: #52525b !important;
-}
