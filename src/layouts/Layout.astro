@@ -1,14 +1,31 @@
 ---
 import "../styles/global.css";
 import Navbar from "../components/Navbar.astro";
+
+interface Props {
+  isHome?: boolean;
+}
+
+const { isHome = false } = Astro.props;
 ---
 
 <html lang="en">
   <head>
     <script is:inline>
-    if (localStorage.getItem('theme') === 'dark') {
-      document.documentElement.classList.add('dark');
-    }
+      (function() {
+        const theme = localStorage.getItem('theme') || 
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+
+        document.documentElement.classList.add('no-transition');
+        window.addEventListener('load', () => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              document.documentElement.classList.remove('no-transition');
+            });
+          });
+        });
+      })();
     </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,7 +36,7 @@ import Navbar from "../components/Navbar.astro";
     />
   </head>
   <body
-    class="bg-transparent text-slate-900 min-h-screen font-['Inter'] selection:bg-indigo-100 selection:text-indigo-900"
+    class="bg-transparent text-slate-900 dark:text-slate-100 min-h-screen font-['Inter'] selection:bg-indigo-100 selection:text-indigo-900 dark:selection:bg-indigo-900 dark:selection:text-indigo-100"
   >
     <video
       id="bg-video"
@@ -32,7 +49,7 @@ import Navbar from "../components/Navbar.astro";
       <source src="/bg-video.mp4" type="video/mp4" />
     </video>
 
-    <Navbar />
+    <Navbar isHome={isHome} />
 
     <main class="w-full pt-30">
       <slot />

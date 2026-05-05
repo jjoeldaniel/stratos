@@ -2,170 +2,225 @@
 
 #bg-video {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   object-fit: cover;
   z-index: -1;
+ 
+  filter: contrast(0.28);
+  transition: filter 0.4s ease;
+}
+ 
+html.dark #bg-video {
+  filter: brightness(0.35);
+}
+ 
+body.drive-page #bg-video {
+  display: none;
 }
 
-/* ── Dark mode ───────────────────────────────────── */
 :root {
-  --drive-border: rgba(200, 200, 220, 0.4);
-  --drive-text: #1e293b;
-  --drive-text-muted: #64748b;
-  --drive-card: #ffffff;
+  --drive-bg:           #f8fafc;
+  --drive-sidebar-bg:   #ffffff;
+  --drive-border:       rgba(0, 0, 0, 0.08);
+  --drive-text:         #1e293b;
+  --drive-text-muted:   #64748b;
+  --drive-card:         #ffffff;
+  --drive-card-hover:   #f8fafc;
+  --drive-card-border:  rgba(0, 0, 0, 0.08);
+  --drive-input-bg:     rgba(0, 0, 0, 0.04);
   --drive-input-border: #e2e8f0;
+
+  --menu-bg:     rgba(255, 255, 255, 0.97);
+  --menu-border: rgba(0, 0, 0, 0.08);
+  --menu-text:   #1e293b;
+  --menu-hover:  rgba(99, 102, 241, 0.07);
+
+  --modal-bg:     #ffffff;
+  --modal-border: rgba(0, 0, 0, 0.06);
+  --modal-text:   #1e293b;
+  --modal-muted:  #64748b;
+  --modal-input:  #f8fafc;
 }
 
 html.dark {
-  --drive-border: rgba(255, 255, 255, 0.08);
-  --drive-text: #f1f5f9;
-  --drive-text-muted: #94a3b8;
-  --drive-card: rgba(255, 255, 255, 0.06);
-  --drive-input-border: rgba(255, 255, 255, 0.1);
+  --drive-bg:           #0f0f17;
+  --drive-sidebar-bg:   rgba(15, 15, 23, 0.98);
+  --drive-border:       rgba(255, 255, 255, 0.07);
+  --drive-text:         #f1f5f9;
+  --drive-text-muted:   #94a3b8;
+  --drive-card:         rgba(255, 255, 255, 0.05);
+  --drive-card-hover:   rgba(255, 255, 255, 0.09);
+  --drive-card-border:  rgba(255, 255, 255, 0.08);
+  --drive-input-bg:     rgba(255, 255, 255, 0.06);
+  --drive-input-border: rgba(255, 255, 255, 0.12);
+
+  --menu-bg:     rgba(28, 28, 40, 0.97);
+  --menu-border: rgba(255, 255, 255, 0.08);
+  --menu-text:   #f1f5f9;
+  --menu-hover:  rgba(99, 102, 241, 0.15);
+
+  --modal-bg:     #1e1e2a;
+  --modal-border: rgba(255, 255, 255, 0.06);
+  --modal-text:   #f1f5f9;
+  --modal-muted:  #94a3b8;
+  --modal-input:  rgba(255, 255, 255, 0.06);
 }
 
-html.dark header {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+html.dark {
+  background-color: #0f0f17;
+}
+html.no-transition * {
+  transition: none !important;
 }
 
-
-html.dark #breadcrumbs button,
-html.dark #breadcrumbs span {
-  color: #f1f5f9 !important;
+body.drive-page #bg-video,
+body.drive-page #light-overlay {
+  display: none;
 }
 
-html.dark .mock-section-label {
-  color: #f1f5f9 !important;
+body.drive-page {
+  background-color: var(--drive-bg);
+  color: var(--drive-text);
 }
 
-html.dark h3.text-xs.font-bold {
-  color: #94a3b8 !important;
-}
-
-html.dark [data-item-path] {
-  background-color: var(--drive-card) !important;
+body.drive-page .flex.relative.h-full {
+  background-color: var(--drive-bg) !important;
   border-color: var(--drive-border) !important;
+}
+
+body.drive-page .border-b {
+  border-color: var(--drive-border) !important;
+}
+
+body.drive-page #mobile-sidebar {
+  background-color: var(--drive-sidebar-bg) !important;
+  border-color: var(--drive-border) !important;
+}
+
+body.drive-page #mobile-sidebar p {
+  color: var(--drive-text-muted) !important;
+}
+
+body.drive-page #drive-main {
+  background-color: var(--drive-bg) !important;
+}
+
+body.drive-page h3.text-xs.font-bold {
+  color: var(--drive-text-muted) !important;
+}
+
+#breadcrumbs button,
+#breadcrumbs span {
   color: var(--drive-text) !important;
 }
 
-html.dark [data-item-path]:hover {
-  background-color: rgba(255, 255, 255) !important;
-  border-color: rgba(99, 102, 241, 0.4) !important;
-}
-
-html.dark .text-xs.font-semibold.text-gray-700,
-html.dark .text-sm.font-semibold.text-slate-700,
-html.dark .file-name,
-html.dark [data-item-path] span {
+#toggle-select-mode,
+#sort-select {
+  background-color: var(--drive-card) !important;
+  border-color: var(--drive-input-border) !important;
   color: var(--drive-text) !important;
 }
 
-html.dark .border-t.border-gray-100 {
-  border-color: rgba(255, 255, 255, 0.06) !important;
+[data-item-path] {
+  background-color: var(--drive-card) !important;
+  border-color: var(--drive-card-border) !important;
+  color: var(--drive-text) !important;
 }
 
-html.dark .text-gray-500 {
-  color: #94a3b8 !important;
+[data-item-path]:hover {
+  background-color: var(--drive-card-hover) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
 }
 
-html.dark #toggle-select-mode,
-html.dark #sort-select {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #f1f5f9 !important;
+[data-item-path] span,
+[data-item-path] .text-xs,
+[data-item-path] .text-sm {
+  color: var(--drive-text) !important;
 }
 
-html.dark #mobile-sidebar {
-  background-color: rgba(0, 0, 0, 0.25) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+.border-t.border-gray-100 {
+  border-color: var(--drive-border) !important;
 }
 
-html.dark .sidebar-item {
-  color: rgba(255, 255, 255, 0.7) !important;
+.py-10.text-center {
+  color: var(--drive-text-muted) !important;
+  border-color: var(--drive-border) !important;
 }
 
-html.dark .sidebar-active {
-  color: #818cf8 !important;
-  background: rgba(99, 102, 241, 0.15) !important;
-}
-
-html.dark .storage-label,
-html.dark .storage-text {
-  color: #94a3b8 !important;
-}
-
-html.dark .sidebar-divider {
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-
-html.dark #new-folder-btn {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #f1f5f9 !important;
-}
-
-html.dark #context-menu,
-html.dark #bg-context-menu {
-  background-color: rgba(30, 30, 40, 0.95) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(20px) !important;
-}
-
-html.dark #context-menu button,
-html.dark #bg-context-menu button {
-  color: #f1f5f9 !important;
-}
-
-html.dark #context-menu button:hover,
-html.dark #bg-context-menu button:hover {
-  background-color: rgba(99, 102, 241, 0.15) !important;
-}
-
-html.dark #context-menu .border-t {
-  border-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-html.dark #modal-content,
-html.dark .px-5.py-5.bg-white,
-html.dark .px-5.py-4.border-b,
-html.dark .px-5.py-3.bg-slate-50\/50 {
-  background-color: #1e1e2a !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-html.dark #modal-title,
-html.dark #modal-message {
-  color: #f1f5f9 !important;
-}
-
-html.dark #modal-input {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #f1f5f9 !important;
-}
-
-html.dark #modal-cancel {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #f1f5f9 !important;
-}
-
-html.dark .py-10.text-center {
-  color: #94a3b8 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-html.dark #drive-main .text-white {
-  color: #f1f5f9 !important;
+#new-folder-btn {
+  background-color: var(--drive-card) !important;
+  border-color: var(--drive-input-border) !important;
+  color: var(--drive-text) !important;
 }
 
 html.dark #drag-overlay {
   background-color: rgba(10, 10, 30, 0.9) !important;
   border-color: #6366f1 !important;
+}
+
+#context-menu,
+#bg-context-menu {
+  background-color: var(--menu-bg) !important;
+  border-color: var(--menu-border) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+#context-menu button,
+#bg-context-menu button {
+  color: var(--menu-text) !important;
+}
+
+#context-menu button:hover,
+#bg-context-menu button:hover {
+  background-color: var(--menu-hover) !important;
+  color: #6366f1 !important;
+}
+
+#cm-delete {
+  color: #dc2626 !important;
+}
+#cm-delete:hover {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+  color: #dc2626 !important;
+}
+
+#context-menu .border-t {
+  border-color: var(--drive-border) !important;
+}
+
+#modal-content,
+#modal-content .px-5,
+#modal-content .px-5.py-5,
+#modal-content .px-5.py-4,
+#modal-content .px-5.py-3 {
+  background-color: var(--modal-bg) !important;
+  border-color: var(--modal-border) !important;
+}
+
+#modal-title {
+  color: var(--modal-text) !important;
+}
+
+#modal-message {
+  color: var(--modal-muted) !important;
+}
+
+#modal-input {
+  background-color: var(--modal-input) !important;
+  border-color: var(--drive-input-border) !important;
+  color: var(--modal-text) !important;
+}
+
+#modal-cancel {
+  background-color: var(--drive-card) !important;
+  border-color: var(--drive-input-border) !important;
+  color: var(--modal-text) !important;
+}
+
+html.dark header {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 html.dark #bg-video {
@@ -177,66 +232,88 @@ html.dark .mock-frame {
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 24px 80px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
 }
-
 html.dark .mock-header {
   background: rgba(15, 15, 25, 0.6);
   border-color: rgba(255, 255, 255, 0.08);
 }
-
 html.dark .mock-url-bar {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.08);
   color: #64748b;
 }
-
 html.dark .mock-sidebar {
   background: rgba(15, 15, 25, 0.5);
   border-color: rgba(255, 255, 255, 0.06);
 }
-
-html.dark .sidebar-item { color: #94a3b8; }
-html.dark .sidebar-active { background: rgba(99,102,241,0.15); color: #818cf8; }
-html.dark .sidebar-item:hover { background: rgba(99,102,241,0.1); color: #818cf8; }
-html.dark .storage-label,
-html.dark .storage-text { color: #64748b; }
-html.dark .sidebar-divider { background: rgba(255,255,255,0.06); }
-
 html.dark .mock-section-label { color: #f1f5f9; }
-html.dark .toolbar-btn { color: #64748b; }
+html.dark .toolbar-btn         { color: #64748b; }
 html.dark .toolbar-btn:hover,
-html.dark .active-view { background: rgba(99,102,241,0.15); color: #818cf8; }
-
+html.dark .active-view          { background: rgba(99,102,241,0.15); color: #818cf8; }
 html.dark .mock-file {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.08);
 }
-
 html.dark .mock-file:hover {
   background: rgba(255, 255, 255, 0.09);
   border-color: rgba(99, 102, 241, 0.35);
   box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
-
-html.dark .file-name { color: #e2e8f0; }
-html.dark .file-meta { color: #64748b; }
-
+html.dark .file-name  { color: #e2e8f0; }
+html.dark .file-meta  { color: #64748b; }
 html.dark .mock-upload {
   background: rgba(99, 102, 241, 0.05);
   border-color: rgba(99, 102, 241, 0.2);
 }
-
 html.dark .mock-upload:hover {
   background: rgba(99, 102, 241, 0.1);
   border-color: rgba(99, 102, 241, 0.4);
 }
-
 html.dark .float-card {
   background: rgba(20, 20, 30, 0.9);
   border-color: rgba(255, 255, 255, 0.1);
 }
-
 html.dark .float-title { color: #f1f5f9; }
-html.dark .float-sub { color: #64748b; }
+html.dark .float-sub   { color: #64748b; }
+
+html.dark .cl-organizationSwitcherTrigger,
+html.dark .cl-organizationSwitcherTrigger * {
+  color: #ffffff !important;
+}
+
+html.dark [data-unstable-appearance-id="organizationSwitcher"] .cl-userPreviewSecondaryIdentifier,
+html.dark [data-unstable-appearance-id="organizationSwitcher"] .cl-userPreviewMainIdentifier {
+  color: #ffffff !important;
+}
+
+html.dark button.cl-organizationSwitcherTrigger p,
+html.dark button.cl-organizationSwitcherTrigger span {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+html.dark .cl-organizationSwitcherTrigger .cl-internal-18ebv76 {
+  color: #ffffff !important;
+}
+
+html.dark .cl-organizationSwitcherTrigger:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.preload * {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -ms-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+}
+
+html {
+  background-color: #ffffff;
+}
+
+html.dark {
+  background-color: #0f0f17;
+}
 
 .glow-hover {
   transition: box-shadow 0.3s ease, transform 0.3s ease;
