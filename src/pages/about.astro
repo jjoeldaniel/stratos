@@ -3,24 +3,14 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-  <div
-    class="relative overflow-hidden w-full bg-slate-50 min-h-[calc(100vh-73px)] -mt-[73px] pt-[73px]"
-  >
-    <div
-      class="max-w-4xl mx-auto px-6 pt-24 pb-32 relative z-10 flex flex-col items-center"
-    >
-      <h1
-        class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-8 max-w-2xl text-center leading-tight"
-      >
-        Build better, move faster. Welcome to <span
-          class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"
-          >Stratos.</span
-        >
+  <div class="relative w-full min-h-screen">
+    <div class="max-w-4xl mx-auto px-6 pt-8 pb-32 relative z-10 flex flex-col items-center">
+      
+      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-8 max-w-2xl text-center leading-tight">
+        Build better, move faster. Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Stratos.</span>
       </h1>
 
-      <div
-        class="prose prose-lg text-slate-600 mb-12 text-center max-w-3xl leading-relaxed"
-      >
+      <div class="text-white/80 text-lg mb-16 text-center max-w-3xl leading-relaxed space-y-6">
         <p>
           Stratos is the ultimate cloud storage solution specifically engineered
           to bridge the gap between individual file synchronization and
@@ -29,93 +19,51 @@ import Layout from "../layouts/Layout.astro";
         <p>
           Our mission is to eliminate digital clutter and help teams move faster
           by providing a blazingly fast, deeply intuitive, and meticulously
-          designed storage environment. Secure file drops, instant uploads,
-          robust role-based access control, and stunning aesthetic interfaces
-          are foundational to the Stratos experience.
+          designed storage environment.
         </p>
       </div>
 
       <div class="w-full grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-left">
-        <div
-          class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-indigo-500/5"
-        >
-          <div
-            class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        
+        <div class="glow-hover bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/20 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-indigo-400 mb-4">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-slate-900 mb-2">Supabase Speeds</h3>
-          <p class="text-sm text-slate-600">
+          <h3 class="text-lg font-bold text-white mb-2">Supabase Speeds</h3>
+          <p class="text-sm text-white/60">
             Built atop an edge-optimized data layer, your files are always a
             click away with near-instant download logic.
           </p>
         </div>
 
-        <div
-          class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-purple-500/5"
-        >
-          <div
-            class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-4"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-              ></path>
+        <div class="glow-hover bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/20 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-purple-400 mb-4">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-slate-900 mb-2">
-            Clerk Organizations
-          </h3>
-          <p class="text-sm text-slate-600">
+          <h3 class="text-lg font-bold text-white mb-2">Clerk Organizations</h3>
+          <p class="text-sm text-white/60">
             Role-based access enables admins to moderate content efficiently,
             offering separate team spaces and private drives.
           </p>
         </div>
 
-        <div
-          class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-pink-500/5"
-        >
-          <div
-            class="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 mb-4"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-              ></path>
+        <div class="glow-hover bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/20 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-pink-400 mb-4">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-slate-900 mb-2">
-            Uncapped Uploads
-          </h3>
-          <p class="text-sm text-slate-600">
+          <h3 class="text-lg font-bold text-white mb-2">Uncapped Uploads</h3>
+          <p class="text-sm text-white/60">
             Harness robust Drag & Drop with a completely frictionless upload
             methodology that doesn't limit productivity.
           </p>
         </div>
+
       </div>
     </div>
   </div>
