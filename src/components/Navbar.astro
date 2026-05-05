@@ -51,7 +51,7 @@ const isDrivePage = pathname === "/drive" || pathname.startsWith("/drive/");
         )}
 
         {!isDrivePage && (
-          <div class="flex items-center gap-3 text-white/50 text-sm font-medium select-none">
+          <div class="flex items-center gap-3 text-white text-sm font-medium select-none">
             <span class="w-px h-4 bg-white/20"></span>
             <span class="tracking-wide">Simple. Fast. Yours.</span>
             <span class="w-px h-4 bg-white/20"></span>
@@ -61,7 +61,7 @@ const isDrivePage = pathname === "/drive" || pathname.startsWith("/drive/");
 
       <nav class="flex items-center gap-3 justify-self-end">
         <SignedOut>
-          <a href="/login" class="text-sm font-semibold text-slate-600 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:-translate-y-0.5 transition">Log in</a>
+          <a href="/login" class="text-sm font-semibold text-white/80 dark:hover:text-white hover:-translate-y-0.5 transition">Log in</a>
           <a href="/register" class="glow-hover text-sm font-semibold text-white bg-indigo-500 hover:bg-indigo-600 dark:bg-white/20 dark:hover:bg-white/30 border border-indigo-500/80 dark:border-white/30 px-5 py-2 rounded-full transition-all active:scale-95 shadow-sm">Get Started</a>
         </SignedOut>
 
