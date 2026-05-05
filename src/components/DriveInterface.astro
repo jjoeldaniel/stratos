@@ -445,43 +445,35 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         </svg>
       </button>
     </div>
-  <!-- Preview navigation arrows -->
-      <button
+    <!-- Preview navigation arrows -->
+    <button
       id="preview-prev"
       class="absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 backdrop-blur-md transition-colors shadow-lg z-[260] hidden"
       title="Previous (←)"
       aria-label="Previous file"
-      >
-      <svg
-        class="w-6 h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
         ><path
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           d="M15 19l-7-7 7-7"></path>
       </svg>
-      </button>
-      <button
+    </button>
+    <button
       id="preview-next"
       class="absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 backdrop-blur-md transition-colors shadow-lg z-[260] hidden"
       title="Next (→)"
       aria-label="Next file"
-      >
-      <svg
-        class="w-6 h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
         ><path
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           d="M9 5l7 7-7 7"></path>
       </svg>
-      </button>
+    </button>
     <div
       id="preview-content-container"
       class="w-full h-[85vh] flex items-center justify-center"
@@ -526,7 +518,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
         document
           .querySelectorAll("[data-item-path]")
           .forEach((el) =>
-            el.classList.remove("ring-2", "ring-blue-500", "bg-blue-50")
+            el.classList.remove("ring-2", "ring-blue-500", "bg-blue-50"),
           );
       }
     };
@@ -541,7 +533,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
       el.classList.add("ring-2", "ring-blue-500", "bg-blue-50");
     }
   };
-    // --- Marquee (rubber-band) selection ---
+  // --- Marquee (rubber-band) selection ---
   let marqueeActive = false;
   let marqueeStartX = 0;
   let marqueeStartY = 0;
@@ -563,7 +555,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
   function clearCurrentSelectionVisuals() {
     selectedItems.forEach((path) => {
       const el = document.querySelector(
-        `[data-item-path="${CSS.escape(path)}"]`
+        `[data-item-path="${CSS.escape(path)}"]`,
       );
       if (el) el.classList.remove("ring-2", "ring-blue-500", "bg-blue-50");
     });
@@ -648,7 +640,11 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
       if (shouldBeSelected && !selectedItems.has(path)) {
         selectedItems.add(path);
         card.classList.add("ring-2", "ring-blue-500", "bg-blue-50");
-      } else if (!shouldBeSelected && selectedItems.has(path) && !wasInInitial) {
+      } else if (
+        !shouldBeSelected &&
+        selectedItems.has(path) &&
+        !wasInInitial
+      ) {
         selectedItems.delete(path);
         card.classList.remove("ring-2", "ring-blue-500", "bg-blue-50");
       }
@@ -849,7 +845,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     // 2. Find the membership for the current active organization
     const activeOrgId = window.Clerk.organization.id;
     const membership = window.Clerk.user.organizationMemberships.find(
-      (m) => m.organization.id === activeOrgId
+      (m) => m.organization.id === activeOrgId,
     );
 
     // 3. Clerk roles usually look like 'org:admin' or 'admin'
@@ -895,7 +891,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
   // --- Move to Ancestor Logic ---
   async function moveItemToAncestor(e, ancestorIndex) {
     const dragData = JSON.parse(
-      e.dataTransfer.getData("application/json") || "{}"
+      e.dataTransfer.getData("application/json") || "{}",
     );
 
     const workspaceId = getActiveWorkspaceId();
@@ -1109,7 +1105,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
       .getElementById("cm-copy")
       .classList.toggle(
         "hidden",
-        !isAdmin || currentTargetItem.type === "folder"
+        !isAdmin || currentTargetItem.type === "folder",
       );
 
     document
@@ -1223,7 +1219,7 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
       window.triggerRename(
         currentTargetItem.path,
         currentTargetItem.name,
-        currentTargetItem.type
+        currentTargetItem.type,
       );
   };
   document.getElementById("cm-download").onclick = async () => {
@@ -1245,100 +1241,100 @@ import { OrganizationSwitcher } from "@clerk/astro/components";
     }
   };
   document.getElementById("cm-copy").onclick = async () => {
-  if (!currentTargetItem) return;
+    if (!currentTargetItem) return;
 
-  const supabase = await getSupabaseClient();
-  const isMulti =
-    selectedItems.has(currentTargetItem.path) && selectedItems.size > 1;
+    const supabase = await getSupabaseClient();
+    const isMulti =
+      selectedItems.has(currentTargetItem.path) && selectedItems.size > 1;
 
-  // Files only — filter out folders from the selection
-  const pathsToCopy = isMulti
-    ? Array.from(selectedItems).filter((p) => window.itemMetadataMap[p]?.id)
-    : [currentTargetItem.path];
+    // Files only — filter out folders from the selection
+    const pathsToCopy = isMulti
+      ? Array.from(selectedItems).filter((p) => window.itemMetadataMap[p]?.id)
+      : [currentTargetItem.path];
 
-  if (pathsToCopy.length === 0) {
-    hideContextMenu();
-    return;
-  }
+    if (pathsToCopy.length === 0) {
+      hideContextMenu();
+      return;
+    }
 
-  const total = pathsToCopy.length;
-  const failed = [];
-  let done = 0;
+    const total = pathsToCopy.length;
+    const failed = [];
+    let done = 0;
 
-  uploadStatus.classList.remove("hidden");
+    uploadStatus.classList.remove("hidden");
 
-  for (const sourcePath of pathsToCopy) {
-    done++;
-    uploadStatus.textContent =
-      total === 1 ? "Duplicating..." : `Duplicating ${done} of ${total}...`;
+    for (const sourcePath of pathsToCopy) {
+      done++;
+      uploadStatus.textContent =
+        total === 1 ? "Duplicating..." : `Duplicating ${done} of ${total}...`;
 
-    try {
-      const destPath = await generateCopyPath(supabase, sourcePath);
-      const { error } = await supabase.storage
-        .from("user_files")
-        .copy(sourcePath, destPath);
-      if (error) {
-        console.error(`Copy failed for "${sourcePath}":`, error);
+      try {
+        const destPath = await generateCopyPath(supabase, sourcePath);
+        const { error } = await supabase.storage
+          .from("user_files")
+          .copy(sourcePath, destPath);
+        if (error) {
+          console.error(`Copy failed for "${sourcePath}":`, error);
+          failed.push({
+            name: sourcePath.split("/").pop(),
+            message: error.message,
+          });
+        }
+      } catch (err) {
+        console.error(`Copy threw for "${sourcePath}":`, err);
         failed.push({
           name: sourcePath.split("/").pop(),
-          message: error.message,
+          message: err?.message || "Unknown error",
         });
       }
-    } catch (err) {
-      console.error(`Copy threw for "${sourcePath}":`, err);
-      failed.push({
-        name: sourcePath.split("/").pop(),
-        message: err?.message || "Unknown error",
-      });
     }
+
+    if (failed.length === 0) {
+      uploadStatus.classList.add("hidden");
+    } else {
+      const successCount = total - failed.length;
+      uploadStatus.textContent =
+        failed.length === total
+          ? `Duplicate failed (${failed.length}). Check console.`
+          : `Duplicated ${successCount} of ${total}. ${failed.length} failed — check console.`;
+      setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+    }
+
+    selectedItems.clear();
+    hideContextMenu();
+    loadFiles();
+  };
+
+  /**
+   * Given a source path like "{workspaceId}/{prefix}{timestamp}_{filename}",
+   * returns a collision-free destination path with "(copy)" / "(copy 2)" suffix.
+   */
+  async function generateCopyPath(supabase, sourcePath) {
+    const parts = sourcePath.split("/");
+    const storedName = parts.pop(); // "{timestamp}_{filename}"
+    const dir = parts.join("/");
+
+    const cleanName = storedName.replace(/^\d+_/, "");
+    const extMatch = cleanName.match(/\.([^.]+)$/);
+    const ext = extMatch ? `.${extMatch[1]}` : "";
+    const base = ext ? cleanName.slice(0, -ext.length) : cleanName;
+
+    const { data: existing } = await supabase.storage
+      .from("user_files")
+      .list(dir, { limit: 1000 });
+    const existingCleanNames = (existing || []).map((f) =>
+      f.name.replace(/^\d+_/, ""),
+    );
+
+    let candidate = `${base} (copy)${ext}`;
+    let n = 2;
+    while (existingCleanNames.includes(candidate)) {
+      candidate = `${base} (copy ${n})${ext}`;
+      n++;
+    }
+
+    return `${dir}/${Date.now()}_${candidate}`;
   }
-
-  if (failed.length === 0) {
-    uploadStatus.classList.add("hidden");
-  } else {
-    const successCount = total - failed.length;
-    uploadStatus.textContent =
-      failed.length === total
-        ? `Duplicate failed (${failed.length}). Check console.`
-        : `Duplicated ${successCount} of ${total}. ${failed.length} failed — check console.`;
-    setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
-  }
-
-  selectedItems.clear();
-  hideContextMenu();
-  loadFiles();
-};
-
-/**
- * Given a source path like "{workspaceId}/{prefix}{timestamp}_{filename}",
- * returns a collision-free destination path with "(copy)" / "(copy 2)" suffix.
- */
-async function generateCopyPath(supabase, sourcePath) {
-  const parts = sourcePath.split("/");
-  const storedName = parts.pop(); // "{timestamp}_{filename}"
-  const dir = parts.join("/");
-
-  const cleanName = storedName.replace(/^\d+_/, "");
-  const extMatch = cleanName.match(/\.([^.]+)$/);
-  const ext = extMatch ? `.${extMatch[1]}` : "";
-  const base = ext ? cleanName.slice(0, -ext.length) : cleanName;
-
-  const { data: existing } = await supabase.storage
-    .from("user_files")
-    .list(dir, { limit: 1000 });
-  const existingCleanNames = (existing || []).map((f) =>
-    f.name.replace(/^\d+_/, "")
-  );
-
-  let candidate = `${base} (copy)${ext}`;
-  let n = 2;
-  while (existingCleanNames.includes(candidate)) {
-    candidate = `${base} (copy ${n})${ext}`;
-    n++;
-  }
-
-  return `${dir}/${Date.now()}_${candidate}`;
-}
   document.getElementById("cm-delete").onclick = async () => {
     if (currentTargetItem) {
       if (selectedItems.has(currentTargetItem.path) && selectedItems.size > 1) {
@@ -1364,7 +1360,7 @@ async function generateCopyPath(supabase, sourcePath) {
               .list(path, { limit: 100 });
             if (filesToDelete && filesToDelete.length > 0) {
               const pathsToRemove = filesToDelete.map(
-                (file) => `${path}/${file.name}`
+                (file) => `${path}/${file.name}`,
               );
               await supabase.storage
                 .from("user_files")
@@ -1397,88 +1393,88 @@ async function generateCopyPath(supabase, sourcePath) {
   fileInput.addEventListener("change", (e) => handleUpload(e.target.files));
 
   newFolderBtn.addEventListener("click", async () => {
-  const folderName = await showModal({
-    type: "prompt",
-    title: "New Folder",
-    confirmText: "Create",
-  });
-  if (!folderName) return;
-  const workspaceId = getActiveWorkspaceId();
-  const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
-  const dummyPath = `${workspaceId}/${prefix}${folderName}/.emptyFolderPlaceholder`;
-  const supabase = await getSupabaseClient();
+    const folderName = await showModal({
+      type: "prompt",
+      title: "New Folder",
+      confirmText: "Create",
+    });
+    if (!folderName) return;
+    const workspaceId = getActiveWorkspaceId();
+    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+    const dummyPath = `${workspaceId}/${prefix}${folderName}/.emptyFolderPlaceholder`;
+    const supabase = await getSupabaseClient();
 
-  uploadStatus.classList.remove("hidden");
-  uploadStatus.textContent = "Creating folder...";
-  try {
-    const { error } = await supabase.storage
-      .from("user_files")
-      .upload(dummyPath, new Blob([""]));
-    if (error) {
-      console.error(`Failed to create folder "${folderName}":`, error);
-      uploadStatus.textContent = `Failed to create folder: ${error.message}`;
-      setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
-      return;
-    }
-    uploadStatus.classList.add("hidden");
-  } catch (err) {
-    console.error(`Folder creation threw for "${folderName}":`, err);
-    uploadStatus.textContent = `Failed to create folder: ${err?.message || "Unknown error"}`;
-    setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
-    return;
-  }
-  loadFiles();
-});
-
-  async function handleUpload(files) {
-  if (!files || files.length === 0) return;
-  const workspaceId = getActiveWorkspaceId();
-  const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
-  const supabase = await getSupabaseClient();
-
-  const total = files.length;
-  const failed = [];
-
-  uploadStatus.classList.remove("hidden");
-
-  let i = 0;
-  for (const file of files) {
-    i++;
-    uploadStatus.textContent =
-      total === 1 ? "Uploading..." : `Uploading ${i} of ${total}...`;
-
-    const filePath = `${workspaceId}/${prefix}${Date.now()}_${file.name}`;
+    uploadStatus.classList.remove("hidden");
+    uploadStatus.textContent = "Creating folder...";
     try {
       const { error } = await supabase.storage
         .from("user_files")
-        .upload(filePath, file);
+        .upload(dummyPath, new Blob([""]));
       if (error) {
-        console.error(`Upload failed for "${file.name}":`, error);
-        failed.push({ name: file.name, message: error.message });
+        console.error(`Failed to create folder "${folderName}":`, error);
+        uploadStatus.textContent = `Failed to create folder: ${error.message}`;
+        setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+        return;
       }
+      uploadStatus.classList.add("hidden");
     } catch (err) {
-      console.error(`Upload threw for "${file.name}":`, err);
-      failed.push({
-        name: file.name,
-        message: err?.message || "Unknown error",
-      });
+      console.error(`Folder creation threw for "${folderName}":`, err);
+      uploadStatus.textContent = `Failed to create folder: ${err?.message || "Unknown error"}`;
+      setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+      return;
     }
-  }
+    loadFiles();
+  });
 
-  if (failed.length === 0) {
-    uploadStatus.classList.add("hidden");
-  } else {
-    const successCount = total - failed.length;
-    uploadStatus.textContent =
-      failed.length === total
-        ? `Upload failed (${failed.length} file${failed.length === 1 ? "" : "s"}). Check console for details.`
-        : `Uploaded ${successCount} of ${total}. ${failed.length} failed — check console.`;
-    // Auto-hide the error banner after 6s so it doesn't get stuck
-    setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
-  }
+  async function handleUpload(files) {
+    if (!files || files.length === 0) return;
+    const workspaceId = getActiveWorkspaceId();
+    const prefix = currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+    const supabase = await getSupabaseClient();
 
-  loadFiles();
-}
+    const total = files.length;
+    const failed = [];
+
+    uploadStatus.classList.remove("hidden");
+
+    let i = 0;
+    for (const file of files) {
+      i++;
+      uploadStatus.textContent =
+        total === 1 ? "Uploading..." : `Uploading ${i} of ${total}...`;
+
+      const filePath = `${workspaceId}/${prefix}${Date.now()}_${file.name}`;
+      try {
+        const { error } = await supabase.storage
+          .from("user_files")
+          .upload(filePath, file);
+        if (error) {
+          console.error(`Upload failed for "${file.name}":`, error);
+          failed.push({ name: file.name, message: error.message });
+        }
+      } catch (err) {
+        console.error(`Upload threw for "${file.name}":`, err);
+        failed.push({
+          name: file.name,
+          message: err?.message || "Unknown error",
+        });
+      }
+    }
+
+    if (failed.length === 0) {
+      uploadStatus.classList.add("hidden");
+    } else {
+      const successCount = total - failed.length;
+      uploadStatus.textContent =
+        failed.length === total
+          ? `Upload failed (${failed.length} file${failed.length === 1 ? "" : "s"}). Check console for details.`
+          : `Uploaded ${successCount} of ${total}. ${failed.length} failed — check console.`;
+      // Auto-hide the error banner after 6s so it doesn't get stuck
+      setTimeout(() => uploadStatus.classList.add("hidden"), 6000);
+    }
+
+    loadFiles();
+  }
 
   // --- Targeted Drag & Drop Logic ---
   let dragCounter = 0;
@@ -1552,7 +1548,7 @@ async function generateCopyPath(supabase, sourcePath) {
                   name: item.name,
                   displayPath: `${currentDir.replace(
                     workspaceId,
-                    ""
+                    "",
                   )}/${cleanName}`.substring(1),
                   fullPath: p,
                 });
@@ -1673,12 +1669,12 @@ async function generateCopyPath(supabase, sourcePath) {
             }));
             e.dataTransfer.setData(
               "application/json",
-              JSON.stringify({ multiple: true, items })
+              JSON.stringify({ multiple: true, items }),
             );
           } else {
             e.dataTransfer.setData(
               "application/json",
-              JSON.stringify({ path: folderFullPath, type: "folder" })
+              JSON.stringify({ path: folderFullPath, type: "folder" }),
             );
           }
         };
@@ -1746,7 +1742,7 @@ async function generateCopyPath(supabase, sourcePath) {
       // 1) Pre-fetch image urls for previews
       let signedUrlMap = {};
       const imageFiles = files.filter((f) =>
-        /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name)
+        /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name),
       );
       const imagePathsToFetch = imageFiles.map((f) => f.fullPath);
 
@@ -1786,12 +1782,12 @@ async function generateCopyPath(supabase, sourcePath) {
             }));
             e.dataTransfer.setData(
               "application/json",
-              JSON.stringify({ multiple: true, items })
+              JSON.stringify({ multiple: true, items }),
             );
           } else {
             e.dataTransfer.setData(
               "application/json",
-              JSON.stringify({ path: fullPath, type: "file" })
+              JSON.stringify({ path: fullPath, type: "file" }),
             );
           }
         };
@@ -1808,7 +1804,7 @@ async function generateCopyPath(supabase, sourcePath) {
           /^(doc|docx|txt|rtf|pdf|odt|pages|csv|xls|xlsx|ppt|pptx)$/.test(ext);
         const isCode =
           /^(js|ts|html|css|jsx|tsx|py|java|c|cpp|json|md|php|sh|yml|yaml)$/.test(
-            ext
+            ext,
           );
         const isArchive = /^(zip|rar|7z|tar|gz)$/.test(ext);
         const isAudio = /^(mp3|wav|ogg|flac|m4a)$/.test(ext);
@@ -1869,7 +1865,7 @@ async function generateCopyPath(supabase, sourcePath) {
   // File Moving Logic
   window.moveFileToFolder = async (e, targetFolderName) => {
     const dragData = JSON.parse(
-      e.dataTransfer.getData("application/json") || "{}"
+      e.dataTransfer.getData("application/json") || "{}",
     );
 
     const workspaceId = getActiveWorkspaceId();
@@ -1929,7 +1925,7 @@ async function generateCopyPath(supabase, sourcePath) {
 
   const previewModal = document.getElementById("preview-modal");
   const previewContentContainer = document.getElementById(
-    "preview-content-container"
+    "preview-content-container",
   );
   const previewClose = document.getElementById("preview-close");
   const previewDownloadBtn = document.getElementById("preview-download");
@@ -1942,7 +1938,7 @@ async function generateCopyPath(supabase, sourcePath) {
 
   function collectPreviewableSiblings() {
     const cards = document.querySelectorAll(
-      '[data-item-path][data-item-type="file"]'
+      '[data-item-path][data-item-type="file"]',
     );
     const siblings = [];
     cards.forEach((card) => {
@@ -1959,17 +1955,15 @@ async function generateCopyPath(supabase, sourcePath) {
 
   function updatePreviewNavVisibility() {
     const hasMultiple = previewSiblings.length > 1;
-    if (previewPrevBtn)
-      previewPrevBtn.classList.toggle("hidden", !hasMultiple);
-    if (previewNextBtn)
-      previewNextBtn.classList.toggle("hidden", !hasMultiple);
+    if (previewPrevBtn) previewPrevBtn.classList.toggle("hidden", !hasMultiple);
+    if (previewNextBtn) previewNextBtn.classList.toggle("hidden", !hasMultiple);
   }
 
   function showPreviewAtOffset(delta) {
     if (previewSiblings.length === 0) return;
     const len = previewSiblings.length;
     // Wrap-around modulo (handles negative delta too)
-    previewIndex = ((previewIndex + delta) % len + len) % len;
+    previewIndex = (((previewIndex + delta) % len) + len) % len;
     window.triggerPreview(previewSiblings[previewIndex].path);
   }
 
@@ -1986,17 +1980,17 @@ async function generateCopyPath(supabase, sourcePath) {
     };
 
     document.addEventListener("keydown", (e) => {
-  if (previewModal.classList.contains("hidden")) return;
-  if (e.key === "Escape") {
-    previewClose.click();
-  } else if (e.key === "ArrowLeft") {
-    e.preventDefault();
-    showPreviewAtOffset(-1);
-  } else if (e.key === "ArrowRight") {
-    e.preventDefault();
-    showPreviewAtOffset(1);
-  }
-});
+      if (previewModal.classList.contains("hidden")) return;
+      if (e.key === "Escape") {
+        previewClose.click();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        showPreviewAtOffset(-1);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        showPreviewAtOffset(1);
+      }
+    });
   }
 
   window.triggerPreview = async (path) => {
@@ -2021,7 +2015,7 @@ async function generateCopyPath(supabase, sourcePath) {
         previewSiblings = collectPreviewableSiblings();
         previewIndex = previewSiblings.findIndex((s) => s.path === path);
       }
-  updatePreviewNavVisibility();
+      updatePreviewNavVisibility();
 
       previewModal.classList.remove("hidden");
       previewModal.classList.add("flex");
@@ -2094,7 +2088,7 @@ async function generateCopyPath(supabase, sourcePath) {
           .from("user_files")
           .move(
             `${path}/.emptyFolderPlaceholder`,
-            `${newPath}/.emptyFolderPlaceholder`
+            `${newPath}/.emptyFolderPlaceholder`,
           );
       }
     } else {
@@ -2129,7 +2123,7 @@ async function generateCopyPath(supabase, sourcePath) {
 
       if (filesToDelete && filesToDelete.length > 0) {
         const pathsToRemove = filesToDelete.map(
-          (file) => `${path}/${file.name}`
+          (file) => `${path}/${file.name}`,
         );
         await supabase.storage
           .from("user_files")
@@ -2158,7 +2152,7 @@ async function generateCopyPath(supabase, sourcePath) {
         loadFiles(query);
       }, 300);
     });
-  };
+  }
 
   document.addEventListener("keydown", (e) => {
     const target = e.target;

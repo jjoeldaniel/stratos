@@ -30,7 +30,7 @@ const isDrivePage = pathname === "/drive" || pathname.startsWith("/drive/");
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
           </svg>
         </div>
-        <h1 class="text-xl font-semibold tracking-tight text-slate-800 dark:text-white transition-all duration-300 group-hover:-translate-y-0.5">Stratos</h1>
+        <h1 class="text-xl font-semibold tracking-tight text-white transition-all duration-300 group-hover:-translate-y-0.5">Stratos</h1>
       </a>
 
       <div class="justify-self-center w-full max-w-md hidden md:flex items-center justify-center">
@@ -51,10 +51,10 @@ const isDrivePage = pathname === "/drive" || pathname.startsWith("/drive/");
         )}
 
         {!isDrivePage && (
-          <div class="flex items-center gap-3 text-slate-400 dark:text-white/50 text-sm font-medium select-none">
-            <span class="w-px h-4 bg-black/10 dark:bg-white/20"></span>
+          <div class="flex items-center gap-3 text-white/50 text-sm font-medium select-none">
+            <span class="w-px h-4 bg-white/20"></span>
             <span class="tracking-wide">Simple. Fast. Yours.</span>
-            <span class="w-px h-4 bg-black/10 dark:bg-white/20"></span>
+            <span class="w-px h-4 bg-white/20"></span>
           </div>
         )}
       </div>
@@ -67,7 +67,7 @@ const isDrivePage = pathname === "/drive" || pathname.startsWith("/drive/");
 
         <SignedIn>
           {!isDrivePage && (
-            <a href="/drive" class="text-sm font-semibold text-slate-600 dark:text-white/80 hover:text-slate-900 dark:hover:text-white px-2 transition-colors">Go to Drive</a>
+            <a href="/drive" class="text-sm font-semibold text-white/80 hover:text-white px-2 transition-colors">Go to Drive</a>
           )}
           <div class="p-1 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center">
             <UserButton
